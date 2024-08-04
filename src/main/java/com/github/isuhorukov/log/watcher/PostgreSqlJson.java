@@ -54,11 +54,15 @@ public class PostgreSqlJson {
             cliLogger.error("Path '{}' is not directory", watchDir);
             return;
         }
+        if(saveInterval<=0 || saveInterval>1000){
+            cliLogger.error("saveInterval must be between 1 and 1000 (sec)");
+            return;
+        }
         positionFileTasks(saveInterval);
         initialLogImport(sourceDirectory);
         Path dirToWatch = Paths.get(watchDir);
-        try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
-            dirToWatch.register(watchService, ENTRY_CREATE, ENTRY_MODIFY);
+        try (WatchService watchService = getWatchService()) {
+            registerWatchEvent(dirToWatch, watchService);
             WatchKey key;
             while ((key = watchService.take()) != null) {
                 for (WatchEvent<?> event : key.pollEvents()) {
@@ -73,7 +77,15 @@ public class PostgreSqlJson {
         }
     }
 
-    void initialLogImport(File sourceDirectory) throws IOException {
+    protected void registerWatchEvent(Path dirToWatch, WatchService watchService) throws IOException {
+        dirToWatch.register(watchService, ENTRY_CREATE, ENTRY_MODIFY);
+    }
+
+    protected WatchService getWatchService() throws IOException {
+        return FileSystems.getDefault().newWatchService();
+    }
+
+    protected void initialLogImport(File sourceDirectory) throws IOException {
         File[] jsonLogs = sourceDirectory.listFiles(pathname -> pathname.getName().endsWith(JSON_SUFFIX));
 
         if(jsonLogs!=null && jsonLogs.length>0){
@@ -161,7 +173,7 @@ public class PostgreSqlJson {
                 throw new IllegalArgumentException(severity);
         }
     }
-    private void positionFileTasks(long saveInterval) throws IOException {
+    protected void positionFileTasks(long saveInterval) throws IOException {
         if(new File(CURRENT_LOGGER_POSITION).exists()) {
             position.putAll(mapper.readValue(new File(CURRENT_LOGGER_POSITION),
                     new TypeReference<ConcurrentHashMap<String, Long>>() {}));
@@ -175,7 +187,7 @@ public class PostgreSqlJson {
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveLogFilesPosition));
     }
 
-    private synchronized void saveLogFilesPosition() {
+    protected synchronized void saveLogFilesPosition() {
         try {
             if(position.isEmpty()){
                 return;
