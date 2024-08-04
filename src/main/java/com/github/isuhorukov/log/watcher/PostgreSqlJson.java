@@ -1,4 +1,4 @@
-package com.github.isuhorukov.logs.pg;
+package com.github.isuhorukov.log.watcher;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -21,15 +21,15 @@ import java.util.concurrent.TimeUnit;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
-public class PostgresJsonLogWatcher {
+public class PostgreSqlJson {
     public static final String DURATION = "duration: ";
     public static final String MS = " ms";
     public static final String PLAN = "plan:\n";
     public static final String JSON_SUFFIX = ".json";
-    private static final Map<String, Long> position = new ConcurrentHashMap<>();
-    private static final ObjectMapper mapper = new ObjectMapper();
     public static final String CURRENT_LOGGER_POSITION = ".current_logger_position";
-    private static final Logger logger = LoggerFactory.getLogger(PostgresJsonLogWatcher.class);
+    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final Logger logger = LoggerFactory.getLogger(PostgreSqlJson.class);
+    final Map<String, Long> position = new ConcurrentHashMap<>();
 
 
     @SneakyThrows
@@ -40,10 +40,10 @@ public class PostgresJsonLogWatcher {
         }
         String watchDir = args[0];
         long saveInterval = Long.parseLong(System.getProperty("saveInterval", "10"));
-        watchPostgreSqlLogs(watchDir, saveInterval);
+        new PostgreSqlJson().watchPostgreSqlLogs(watchDir, saveInterval);
     }
 
-    public static void watchPostgreSqlLogs(String watchDir, long saveInterval) throws IOException, InterruptedException {
+    public void watchPostgreSqlLogs(String watchDir, long saveInterval) throws IOException, InterruptedException {
         File sourceDirectory = new File(watchDir);
         if(!sourceDirectory.exists()) {
             logger.error("Postgres log directory {} for monitoring not found", watchDir);
@@ -53,7 +53,8 @@ public class PostgresJsonLogWatcher {
             logger.error("Path {} is not directory", watchDir);
             return;
         }
-        initialLogImport(saveInterval, sourceDirectory);
+        positionFileTasks(saveInterval);
+        initialLogImport(sourceDirectory);
         Path dirToWatch = Paths.get(watchDir);
         try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
             dirToWatch.register(watchService, ENTRY_CREATE, ENTRY_MODIFY);
@@ -71,10 +72,8 @@ public class PostgresJsonLogWatcher {
         }
     }
 
-    private static void initialLogImport(long saveInterval, File sourceDirectory) throws IOException {
+    void initialLogImport(File sourceDirectory) throws IOException {
         File[] jsonLogs = sourceDirectory.listFiles(pathname -> pathname.getName().endsWith(JSON_SUFFIX));
-
-        positionFileTasks(saveInterval);
 
         if(jsonLogs!=null && jsonLogs.length>0){
             Arrays.sort(jsonLogs, Comparator.comparing(File::getName));
@@ -85,7 +84,7 @@ public class PostgresJsonLogWatcher {
     }
 
     @SneakyThrows
-    private static void parseLogLine(String line, String logName){
+    void parseLogLine(String line, String logName){
         JsonNode jsonNode = mapper.readTree(line);
         Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
 
@@ -99,6 +98,7 @@ public class PostgresJsonLogWatcher {
                 String plan = message.substring(planIdx + PLAN.length());
                 loggingEventBuilder.addKeyValue("plan", plan);
             }
+            loggingEventBuilder.setMessage("");
         } else {
             loggingEventBuilder.setMessage(message);
             if(message.startsWith("statement: ")){
@@ -160,7 +160,7 @@ public class PostgresJsonLogWatcher {
                 throw new IllegalArgumentException(severity);
         }
     }
-    private static void positionFileTasks(long saveInterval) throws IOException {
+    private void positionFileTasks(long saveInterval) throws IOException {
         if(new File(CURRENT_LOGGER_POSITION).exists()) {
             position.putAll(mapper.readValue(new File(CURRENT_LOGGER_POSITION),
                     new TypeReference<ConcurrentHashMap<String, Long>>() {}));
@@ -171,11 +171,14 @@ public class PostgresJsonLogWatcher {
                 saveLogFilesPosition();
             }
         }, TimeUnit.SECONDS.toMillis(saveInterval), TimeUnit.SECONDS.toMillis(saveInterval));
-        Runtime.getRuntime().addShutdownHook(new Thread(PostgresJsonLogWatcher::saveLogFilesPosition));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::saveLogFilesPosition));
     }
 
-    private static synchronized void saveLogFilesPosition() {
+    private synchronized void saveLogFilesPosition() {
         try {
+            if(position.isEmpty()){
+                return;
+            }
             try (FileOutputStream currentPostitionFile = new FileOutputStream(CURRENT_LOGGER_POSITION)){
                 mapper.writeValue(currentPostitionFile,new TreeMap<>(position));
             }
@@ -184,7 +187,7 @@ public class PostgresJsonLogWatcher {
         }
     }
 
-    private static void readJsonLog(File jsonLog) throws IOException {
+    void readJsonLog(File jsonLog) throws IOException {
         String jsonLogName = jsonLog.getName();
         long from = position.computeIfAbsent(jsonLogName, name -> 0L);
         if(jsonLog.length() ==0){
