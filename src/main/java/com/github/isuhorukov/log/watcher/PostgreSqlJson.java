@@ -29,13 +29,14 @@ public class PostgreSqlJson {
     public static final String CURRENT_LOGGER_POSITION = ".current_logger_position";
     private static final ObjectMapper mapper = new ObjectMapper();
     private static final Logger logger = LoggerFactory.getLogger(PostgreSqlJson.class);
+    private static final Logger cliLogger = LoggerFactory.getLogger("cli");
     final Map<String, Long> position = new ConcurrentHashMap<>();
 
 
     @SneakyThrows
     public static void main(String[] args) {
         if(args==null || args.length!=1){
-            logger.error("Path to PostgreSQL log directory expected");
+            cliLogger.error("Path to PostgreSQL log directory expected");
             return;
         }
         String watchDir = args[0];
@@ -46,11 +47,11 @@ public class PostgreSqlJson {
     public void watchPostgreSqlLogs(String watchDir, long saveInterval) throws IOException, InterruptedException {
         File sourceDirectory = new File(watchDir);
         if(!sourceDirectory.exists()) {
-            logger.error("Postgres log directory {} for monitoring not found", watchDir);
+            cliLogger.error("PostgreSQL directory '{}' with JSON logs not exist", watchDir);
             return;
         }
         if(!sourceDirectory.isDirectory()){
-            logger.error("Path {} is not directory", watchDir);
+            cliLogger.error("Path '{}' is not directory", watchDir);
             return;
         }
         positionFileTasks(saveInterval);
@@ -183,7 +184,7 @@ public class PostgreSqlJson {
                 mapper.writeValue(currentPostitionFile,new TreeMap<>(position));
             }
         } catch (Exception e) {
-            logger.error("Unable to save current log position", e);
+            cliLogger.error("Unable to save current log position", e);
         }
     }
 
