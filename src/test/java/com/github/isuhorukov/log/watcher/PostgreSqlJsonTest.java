@@ -1,17 +1,26 @@
 package com.github.isuhorukov.log.watcher;
 
 import de.dm.infrastructure.logcapture.LogCapture;
+import lombok.SneakyThrows;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import static de.dm.infrastructure.logcapture.ExpectedKeyValue.keyValue;
+import static de.dm.infrastructure.logcapture.LogExpectation.error;
 import static de.dm.infrastructure.logcapture.LogExpectation.info;
 
-class PostgreSqlJsonTest {
+public class PostgreSqlJsonTest {
 
-    private final PostgreSqlJson logWatcher = new PostgreSqlJson();
+    private static final PostgreSqlJson logWatcher = new PostgreSqlJson();
     @RegisterExtension
     public LogCapture logCapture = LogCapture.forCurrentPackage();
+
+    @AfterAll
+    @SneakyThrows
+    static void afterAll() {
+        logWatcher.close();
+    }
 
     @Test
     void parseLogLine() {
@@ -103,5 +112,65 @@ class PostgreSqlJsonTest {
                 "JIT:\n" +
                 "  Functions: 26\n" +
                 "  Options: Inlining false, Optimization false, Expressions true, Deforming true")));
+    }
+
+    @Test
+    void logWithQueryId(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-01 06:55:52.165 UTC\",\"user\":\"postgres\",\"dbname\":\"postgres\",\"pid\":60,\"remote_host\":\"[local]\",\"session_id\":\"66ab3178.3c\",\"line_num\":4,\"ps\":\"SELECT\",\"session_start\":\"2024-08-01 06:55:52 UTC\",\"vxid\":\"3/0\",\"txid\":0,\"error_severity\":\"LOG\",\"message\":\"duration: 0.795 ms\",\"application_name\":\"psql\",\"backend_type\":\"client backend\",\"query_id\":7911002058943960455}",
+                "postgresql-2024-08-04_072901.json");
+        logCapture.assertLogged(info(keyValue("duration",0.795), keyValue("query_id",7911002058943960455L)));
+    }
+
+    @Test
+    void logFatal(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-02 08:15:46.109 UTC\",\"user\":\"postgres\"," +
+                "\"dbname\":\"osmworld\",\"pid\":37,\"remote_host\":\"172.17.0.1\",\"remote_port\":34616," +
+                "\"session_id\":\"66ab92a0.25\",\"line_num\":39,\"ps\":\"idle\"," +
+                "\"session_start\":\"2024-08-01 13:50:24 UTC\",\"vxid\":\"3/0\",\"txid\":0," +
+                "\"error_severity\":\"FATAL\",\"state_code\":\"57P01\"," +
+                "\"message\":\"terminating connection due to administrator command\",\"application_name\":\"psql\"," +
+                "\"backend_type\":\"client backend\",\"query_id\":6865378226349601843}",
+                "postgresql-2024-08-04_072901.json");
+        logCapture.assertLogged(error("terminating connection due to administrator command",
+                                    keyValue("error_severity","FATAL")));
+    }
+
+    @Test
+    void logError(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-01 13:44:54.729 UTC\",\"user\":\"postgres\"," +
+                "\"dbname\":\"osmworld\",\"pid\":162,\"remote_host\":\"172.17.0.1\",\"remote_port\":60944," +
+                "\"session_id\":\"66ab31f2.a2\",\"line_num\":54,\"ps\":\"idle\"," +
+                "\"session_start\":\"2024-08-01 06:57:54 UTC\",\"vxid\":\"3/156\",\"txid\":0," +
+                "\"error_severity\":\"ERROR\",\"state_code\":\"42601\"," +
+                "\"message\":\"syntax error at or near \\\";\\\"\"," +
+                "\"statement\":\"select * from ;\",\"cursor_position\":15," +
+                "\"application_name\":\"psql\",\"backend_type\":\"client backend\",\"query_id\":0}",
+                "postgresql-2024-08-04_072901.json");
+        logCapture.assertLogged(error("syntax error at or near"));
+    }
+
+    @Test
+    void logParse(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-03 21:43:39.173 UTC\",\"user\":\"postgres\"," +
+                "\"dbname\":\"osmworld\",\"pid\":125,\"remote_host\":\"172.17.0.1\",\"remote_port\":43742," +
+                "\"session_id\":\"66aea48a.7d\",\"line_num\":4,\"ps\":\"PARSE\"," +
+                "\"session_start\":\"2024-08-03 21:43:38 UTC\",\"vxid\":\"4/119\",\"txid\":0," +
+                "\"error_severity\":\"LOG\"," +
+                "\"message\":\"duration: 1.519 ms  parse <unnamed>: SET extra_float_digits = 3\"," +
+                "\"backend_type\":\"client backend\",\"query_id\":-4570799927402708811}\n",
+                "postgresql-2024-08-04_072901.json");
+        logCapture.assertLogged(info(keyValue("parse", true)));
+    }
+
+    @Test
+    void logBind(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-03 21:43:39.173 UTC\",\"user\":\"postgres\"," +
+                "\"dbname\":\"osmworld\",\"pid\":125,\"remote_host\":\"172.17.0.1\",\"remote_port\":43742," +
+                "\"session_id\":\"66aea48a.7d\",\"line_num\":5,\"ps\":\"BIND\"," +
+                "\"session_start\":\"2024-08-03 21:43:38 UTC\",\"vxid\":\"4/119\",\"txid\":0," +
+                "\"error_severity\":\"LOG\"," +
+                "\"message\":\"duration: 0.095 ms  bind <unnamed>: SET extra_float_digits = 3\"," +
+                "\"backend_type\":\"client backend\",\"query_id\":0}","postgresql-2024-08-04_072901.json");
+        logCapture.assertLogged(info(keyValue("bind", true)));
     }
 }

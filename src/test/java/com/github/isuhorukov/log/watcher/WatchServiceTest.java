@@ -64,7 +64,9 @@ public class WatchServiceTest {
         when(watchEvent.context()).thenReturn(jsonLog.getFileName());
         long saveInterval= 1;
         String watchDir = tempDir.toString();
-        postgreSqlJson.watchPostgreSqlLogs(watchDir, saveInterval);
+        postgreSqlJson.setWatchDir(watchDir);
+        postgreSqlJson.setSaveInterval(saveInterval);
+        postgreSqlJson.watchPostgreSqlLogs();
         logCapture.assertLogged(LogExpectation.info("database system is ready to accept connections",
                 keyValue("timestamp", "2024-08-01 06:55:52.123 UTC"), keyValue("pid", 50),
                 keyValue("session_id", "66ab3178.32"), keyValue("line_num", 4),

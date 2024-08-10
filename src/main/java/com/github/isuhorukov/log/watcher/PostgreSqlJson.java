@@ -3,28 +3,32 @@ package com.github.isuhorukov.log.watcher;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.slf4j.spi.LoggingEventBuilder;
+import picocli.CommandLine;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.io.*;
 import java.nio.file.*;
 import java.util.*;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
-public class PostgreSqlJson {
+@CommandLine.Command(mixinStandardHelpOptions = true,
+        header = "This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector")
+@Setter
+public class PostgreSqlJson implements Callable<Integer>, Closeable {
     public static final String DURATION = "duration: ";
     public static final String MS = " ms";
     public static final String PLAN = "plan:\n";
+    public static final String QUERY_ID = "query_id";
     public static final String JSON_SUFFIX = ".json";
     public static final String CURRENT_LOGGER_POSITION = ".current_logger_position";
     private static final ObjectMapper mapper = new ObjectMapper();
@@ -32,32 +36,58 @@ public class PostgreSqlJson {
     private static final Logger cliLogger = LoggerFactory.getLogger("cli");
     final Map<String, Long> position = new ConcurrentHashMap<>();
 
+    private LogEnricher logEnricher = new EnrichmentOff();
+
+    @CommandLine.Parameters(index = "0", description = "Path to PostgreSQL log directory in JSON format")
+    String watchDir;
+    @CommandLine.Option(names = {"-i", "--save_interval"},  defaultValue = "10",
+            description = "Interval of saving (in second) of the current read position in the log file. " +
+                    "The value must be in the range from 1 to 1000 second")
+    long saveInterval;
+    @CommandLine.Option(names = {"-h", "--host"}, description = "The host name of the PostgreSQL server")
+    String host;
+    @CommandLine.Option(names = {"-p", "--port"}, defaultValue = "5432", description = "The port number the PostgreSQL server is listening on")
+    int port;
+    @CommandLine.Option(names = {"-d", "--database"}, description = "The database name")
+    String database = "postgres";
+    @CommandLine.Option(names = {"-u", "--user"}, description = "The database user on whose behalf the connection is being made")
+    String user = "postgres";
+
+    @CommandLine.Option(names = "--password", arity = "0..1", interactive = true)
+    String password = System.getenv("PGPASSWORD");
+
 
     @SneakyThrows
     public static void main(String[] args) {
-        if(args==null || args.length!=1){
-            cliLogger.error("Path to PostgreSQL log directory expected");
-            return;
+        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+            System.exit(new CommandLine(postgreSqlJson).execute(args));
         }
-        String watchDir = args[0];
-        long saveInterval = Long.parseLong(System.getProperty("saveInterval", "10"));
-        new PostgreSqlJson().watchPostgreSqlLogs(watchDir, saveInterval);
     }
 
-    public void watchPostgreSqlLogs(String watchDir, long saveInterval) throws IOException, InterruptedException {
+    @Override
+    public Integer call() throws Exception {
+        return watchPostgreSqlLogs();
+    }
+
+    public int watchPostgreSqlLogs() throws IOException, InterruptedException {
+        if(watchDir==null || watchDir.trim().isEmpty()){
+            cliLogger.error("Path to PostgreSQL log directory expected");
+            return -1;
+        }
         File sourceDirectory = new File(watchDir);
         if(!sourceDirectory.exists()) {
             cliLogger.error("PostgreSQL directory '{}' with JSON logs not exist", watchDir);
-            return;
+            return -1;
         }
         if(!sourceDirectory.isDirectory()){
             cliLogger.error("Path '{}' is not directory", watchDir);
-            return;
+            return -1;
         }
         if(saveInterval<=0 || saveInterval>1000){
             cliLogger.error("saveInterval must be between 1 and 1000 (sec)");
-            return;
+            return -1;
         }
+        initLogEnricher();
         positionFileTasks(saveInterval);
         initialLogImport(sourceDirectory);
         Path dirToWatch = Paths.get(watchDir);
@@ -74,6 +104,22 @@ public class PostgreSqlJson {
                 }
                 key.reset();
             }
+        }
+        return 0;
+    }
+
+    void initLogEnricher() {
+        if(host!=null && !host.isEmpty()){
+            try {
+                logEnricher = new LogEnricherPostgreSql(host, port, database, user, password);
+                logEnricher.getStatement("0");
+            } catch (Exception e) {
+                cliLogger.error("Failed to use log enricher {} for postgres, so I work in mode without log enrichment",
+                        LogEnricherPostgreSql.class.getName(), e);
+                logEnricher = new EnrichmentOff();
+            }
+        } else {
+            logEnricher =  new EnrichmentOff();
         }
     }
 
@@ -102,29 +148,58 @@ public class PostgreSqlJson {
         Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
 
         String message = jsonNode.at("/message").asText();
+        if(logEnricher.enricherApplicationName()!=null && message.contains(logEnricher.enricherApplicationName())){
+            return;
+        }
         LoggingEventBuilder loggingEventBuilder = logger.atLevel(getSeverity(jsonNode.at("/error_severity").asText()));
         if(message.startsWith(DURATION)){
-            double duration = Double.parseDouble(message.substring(DURATION.length(), message.indexOf(MS)));
+            int msEndIndex = message.indexOf(MS);
+            double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));
             loggingEventBuilder.addKeyValue("duration", duration);
             int planIdx = message.indexOf(PLAN);
             if(planIdx!=-1){
                 String plan = message.substring(planIdx + PLAN.length());
                 loggingEventBuilder.addKeyValue("plan", plan);
+            } else
+            if(message.indexOf(" parse ",msEndIndex+2)>-1){
+                loggingEventBuilder.addKeyValue("parse", true);
+            } else
+            if(message.indexOf(" bind ",msEndIndex+2)>-1){
+                loggingEventBuilder.addKeyValue("bind", true);
             }
             loggingEventBuilder.setMessage("");
         } else {
             loggingEventBuilder.setMessage(message);
             if(message.startsWith("statement: ")){
                 loggingEventBuilder.addKeyValue("statement", true);
+            } else
+            if(message.startsWith("execute")){
+                loggingEventBuilder.addKeyValue("execute", true);
             }
         }
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
-            if("error_severity".equals(entry.getKey()) || "message".equals(entry.getKey()) ||
-                    "query_id".equals(entry.getKey())&&"0".equals(entry.getValue().asText()) //skip empty query_id
-            ) continue;
+            String key = entry.getKey();
+            String value = entry.getValue().asText();
+            if("error_severity".equals(key) && (value.equals("INFO") || value.equals("ERROR")
+                    || value.equals("DEBUG") || value.equals("TRACE")) ||
+                    "message".equals(key) ||
+                    (QUERY_ID.equals(key) && "0".equals(value)) //skip empty query_id
+            ){
+                continue;
+            }
+            if("application_name".equals(key) && value.equals(logEnricher.enricherApplicationName())){
+                return; //skip enricher log record by clientName
+            }
+            if(QUERY_ID.equals(key)){
+                String queryId = value;
+                String statement = logEnricher.getStatement(queryId);
+                if(statement!=null && !statement.isEmpty()){
+                    loggingEventBuilder.addKeyValue("statement_text", statement);
+                }
+            }
             JsonNode entryValue = entry.getValue();
-            loggingEventBuilder.addKeyValue(entry.getKey(), getValue(entryValue));
+            loggingEventBuilder.addKeyValue(key, getValue(entryValue));
         }
         loggingEventBuilder.addKeyValue("fileName", logName);
         loggingEventBuilder.log();
@@ -143,12 +218,6 @@ public class PostgreSqlJson {
                         break;
                     case LONG:
                         value = entryValue.asLong();
-                        break;
-                    case FLOAT:
-                        value = entryValue.floatValue();
-                        break;
-                    case DOUBLE:
-                        value = entryValue.doubleValue();
                         break;
                     default:
                         value = entryValue.asText();
@@ -217,5 +286,10 @@ public class PostgreSqlJson {
             }
         }
         position.put(jsonLogName, jsonLog.length());
+    }
+
+    @Override
+    public void close() throws IOException {
+        logEnricher.close();
     }
 }
