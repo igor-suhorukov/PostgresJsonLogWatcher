@@ -36,7 +36,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     private static final Logger cliLogger = LoggerFactory.getLogger("cli");
     final Map<String, Long> position = new ConcurrentHashMap<>();
 
-    private LogEnricher logEnricher = new EnrichmentOff();
+    LogEnricher logEnricher = new EnrichmentOff();
 
     @CommandLine.Parameters(index = "0", description = "Path to PostgreSQL log directory in JSON format")
     String watchDir;
@@ -84,7 +84,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             return -1;
         }
         if(saveInterval<=0 || saveInterval>1000){
-            cliLogger.error("saveInterval must be between 1 and 1000 (sec)");
+            cliLogger.error("saveInterval must be between 1 and 1000 sec. Actual value {}", saveInterval);
             return -1;
         }
         initLogEnricher();
