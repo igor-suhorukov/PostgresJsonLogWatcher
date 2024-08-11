@@ -1,14 +1,28 @@
 package com.github.isuhorukov.log.watcher;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.dm.infrastructure.logcapture.LogCapture;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static de.dm.infrastructure.logcapture.ExpectedKeyValue.keyValue;
 import static de.dm.infrastructure.logcapture.LogExpectation.error;
 import static de.dm.infrastructure.logcapture.LogExpectation.info;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PostgreSqlJsonTest {
 
@@ -172,5 +186,75 @@ public class PostgreSqlJsonTest {
                 "\"message\":\"duration: 0.095 ms  bind <unnamed>: SET extra_float_digits = 3\"," +
                 "\"backend_type\":\"client backend\",\"query_id\":0}","postgresql-2024-08-04_072901.json");
         logCapture.assertLogged(info(keyValue("bind", true)));
+    }
+
+    @Test
+    @SneakyThrows
+    void initialLogImport(@TempDir Path tempDir) {
+        prepareTwoTemporaryJsonFile(tempDir);
+        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+            assertEquals(0, postgreSqlJson.position.keySet().size());
+            postgreSqlJson.initialLogImport(tempDir.toFile());
+            logCapture.assertLogged(info("database system is ready to accept connections", keyValue("pid", 50)));
+            logCapture.assertLogged(info(keyValue("bind", true), keyValue("pid",125)));
+            assertEquals(2, postgreSqlJson.position.keySet().size());
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void testSavePosition(@TempDir Path tempDir) {
+        prepareTwoTemporaryJsonFile(tempDir);
+        prepareOneTemporaryJsonFile(tempDir, "postgresql-2024-08-06_050311.json",
+                "{\"timestamp\":\"2024-08-06 21:43:39.173 UTC\",\"error_severity\":\"LOG\"," +
+                        "\"message\":\"duration: 0.095 ms  bind <unnamed>: SET extra_float_digits = 3\"," +
+                        "\"backend_type\":\"client backend\",\"query_id\":0}");
+        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+            assertEquals(0, postgreSqlJson.position.keySet().size());
+            postgreSqlJson.initialLogImport(tempDir.toFile());
+            assertEquals(3, postgreSqlJson.position.keySet().size());
+            File currentLogPositionFile = tempDir.resolve(".position_file").
+                    toAbsolutePath().toFile();
+            String currentLogPositionPath = currentLogPositionFile.getAbsolutePath();
+            postgreSqlJson.setCurrentLogPositionFile(currentLogPositionPath);
+            postgreSqlJson.saveLogFilesPosition();
+
+            Map<String, Long> currentPosition = new ObjectMapper().
+                    readValue(currentLogPositionFile, new TypeReference<TreeMap<String, Long>>() {
+                    });
+            assertEquals(3, currentPosition.keySet().size());
+            assertArrayEquals(new String[]{"postgresql-2024-08-04_072905.json",
+                    "postgresql-2024-08-05_062501.json",
+                    "postgresql-2024-08-06_050311.json"}, currentPosition.keySet().toArray(new String[0]));
+            assertEquals(266, currentPosition.get("postgresql-2024-08-04_072905.json"));
+            assertEquals(399, currentPosition.get("postgresql-2024-08-05_062501.json"));
+            assertEquals(186, currentPosition.get("postgresql-2024-08-06_050311.json"));            
+        }
+    }
+
+    private static void prepareTwoTemporaryJsonFile(Path tempDir) throws IOException {
+        prepareOneTemporaryJsonLogFile(tempDir);
+        prepareOneTemporaryJsonFile(tempDir, "postgresql-2024-08-05_062501.json",
+                "{\"timestamp\":\"2024-08-05 21:43:39.173 UTC\",\"user\":\"postgres\"," +
+                "\"dbname\":\"osmworld\",\"pid\":125,\"remote_host\":\"172.17.0.1\",\"remote_port\":43742," +
+                "\"session_id\":\"66aea48a.7d\",\"line_num\":5,\"ps\":\"BIND\"," +
+                "\"session_start\":\"2024-08-03 21:43:38 UTC\",\"vxid\":\"4/119\",\"txid\":0," +
+                "\"error_severity\":\"LOG\"," +
+                "\"message\":\"duration: 0.095 ms  bind <unnamed>: SET extra_float_digits = 3\"," +
+                "\"backend_type\":\"client backend\",\"query_id\":0}");
+    }
+
+    private static void prepareOneTemporaryJsonLogFile(Path tempDir) throws IOException {
+        prepareOneTemporaryJsonFile(tempDir, "postgresql-2024-08-04_072905.json",
+                "{\"timestamp\":\"2024-08-04 06:55:52.123 UTC\",\"pid\":50," +
+                "\"session_id\":\"66ab3178.32\",\"line_num\":4,\"session_start\":\"2024-08-01 06:55:52 UTC\"," +
+                "\"txid\":0,\"error_severity\":\"LOG\"," +
+                "\"message\":\"database system is ready to accept connections\",\"backend_type\":\"postmaster\"," +
+                "\"query_id\":0}");
+    }
+
+    private static void prepareOneTemporaryJsonFile(Path tempDir, String other, String x) throws IOException {
+        Path jsonLog1 = Files.createFile(tempDir.resolve(other));
+        Files.write(jsonLog1, x.getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);
     }
 }
