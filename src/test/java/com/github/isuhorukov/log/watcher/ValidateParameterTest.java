@@ -22,7 +22,7 @@ public class ValidateParameterTest {
     @SneakyThrows
     void missingWatchDir() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
-            assertEquals(-1, postgreSqlJson.call());
+            assertEquals(1, postgreSqlJson.call());
         }
         logCapture.assertLogged(error("Path to PostgreSQL log directory expected"));
     }
@@ -33,7 +33,7 @@ public class ValidateParameterTest {
         String watchDir = UUID.randomUUID().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
-            assertEquals(-1, postgreSqlJson.call());
+            assertEquals(1, postgreSqlJson.call());
         }
         logCapture.assertLogged(error("PostgreSQL directory '"+watchDir+"' with JSON logs not exist"));
     }
@@ -44,7 +44,7 @@ public class ValidateParameterTest {
         String watchDir = Files.createFile(tempDir.resolve("tempfile.txt")).toAbsolutePath().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
-            assertEquals(-1, postgreSqlJson.call());
+            assertEquals(1, postgreSqlJson.call());
         }
         logCapture.assertLogged(error("Path '"+watchDir+"' is not directory"));
     }
@@ -56,10 +56,10 @@ public class ValidateParameterTest {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
             postgreSqlJson.setSaveInterval(0);
-            assertEquals(-1, postgreSqlJson.call());
+            assertEquals(1, postgreSqlJson.call());
             logCapture.assertLogged(error("saveInterval must be between 1 and 1000 sec. Actual value 0"));
             postgreSqlJson.setSaveInterval(Long.MAX_VALUE);
-            assertEquals(-1, postgreSqlJson.call());
+            assertEquals(1, postgreSqlJson.call());
             logCapture.assertLogged(error("saveInterval must be between 1 and 1000 sec. Actual value "+Long.MAX_VALUE));
         }
     }

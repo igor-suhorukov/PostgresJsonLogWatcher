@@ -56,6 +56,9 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     @CommandLine.Option(names = "--password", arity = "0..1", interactive = true)
     String password = System.getenv("PGPASSWORD");
 
+    @CommandLine.Option(names = {"-c", "--max_cache_size"},  defaultValue = "50000",
+            description = "Database query cache size")
+    int maximumCacheSize;
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -72,20 +75,20 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     public int watchPostgreSqlLogs() throws IOException, InterruptedException {
         if(watchDir==null || watchDir.trim().isEmpty()){
             cliLogger.error("Path to PostgreSQL log directory expected");
-            return -1;
+            return 1;
         }
         File sourceDirectory = new File(watchDir);
         if(!sourceDirectory.exists()) {
             cliLogger.error("PostgreSQL directory '{}' with JSON logs not exist", watchDir);
-            return -1;
+            return 1;
         }
         if(!sourceDirectory.isDirectory()){
             cliLogger.error("Path '{}' is not directory", watchDir);
-            return -1;
+            return 1;
         }
         if(saveInterval<=0 || saveInterval>1000){
             cliLogger.error("saveInterval must be between 1 and 1000 sec. Actual value {}", saveInterval);
-            return -1;
+            return 1;
         }
         initLogEnricher();
         positionFileTasks(saveInterval);
@@ -111,13 +114,21 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     void initLogEnricher() {
         if(host!=null && !host.isEmpty()){
             try {
-                logEnricher = new LogEnricherPostgreSql(host, port, database, user, password);
-                logEnricher.getStatement("0");
+                logEnricher = new LogEnricherPostgreSql(host, port, database, user, password, maximumCacheSize);
             } catch (Exception e) {
                 cliLogger.error("Failed to use log enricher {} for postgres, so I work in mode without log enrichment",
-                        LogEnricherPostgreSql.class.getName(), e);
+                        LogEnricherPostgreSql.class.getSimpleName(), e);
                 logEnricher = new EnrichmentOff();
             }
+            try {
+                logEnricher.getStatement("0");
+                cliLogger.info("{} up and running", LogEnricherPostgreSql.class.getSimpleName());
+            } catch (Exception e) {
+                cliLogger.error("Make sure the extension is available in the database: CREATE EXTENSION pg_stat_statements;\n" +
+                        "https://www.postgresql.org/docs/current/pgstatstatements.html", e);
+                logEnricher = new EnrichmentOff();
+            }
+
         } else {
             logEnricher =  new EnrichmentOff();
         }
