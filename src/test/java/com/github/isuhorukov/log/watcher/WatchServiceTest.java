@@ -73,4 +73,23 @@ public class WatchServiceTest {
                 keyValue("session_start", "2024-08-01 06:55:52 UTC"), keyValue("txid", 0),
                 keyValue("backend_type", "postmaster"), keyValue("fileName", "postgresql-2024-08-04_072905.json")));
     }
+
+    @Test
+    @SneakyThrows
+    void testWatchServiceSkipNonJson(@TempDir Path tempDir) {
+        Path jsonLog = Files.createFile(tempDir.resolve("postgresql-2024-08-04_072905.log"));
+        Files.write(jsonLog, "".getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);
+        doNothing().when(watchService).close();
+        WatchKey watchKey = mock(WatchKey.class);
+        when(watchService.take()).thenReturn(watchKey).thenReturn(null);
+        WatchEvent<Path> watchEvent = mock(WatchEvent.class);
+        when(watchKey.pollEvents()).thenReturn(Collections.singletonList(watchEvent));
+        when(watchEvent.context()).thenReturn(jsonLog.getFileName());
+        long saveInterval= 1;
+        String watchDir = tempDir.toString();
+        postgreSqlJson.setWatchDir(watchDir);
+        postgreSqlJson.setSaveInterval(saveInterval);
+        postgreSqlJson.watchPostgreSqlLogs();
+        logCapture.assertNotLogged(LogExpectation.info());
+    }
 }

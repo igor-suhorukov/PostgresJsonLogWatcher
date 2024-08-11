@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
-@CommandLine.Command(mixinStandardHelpOptions = true,
+@CommandLine.Command(mixinStandardHelpOptions = true, version = "1.0.0",
         header = "This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector")
 @Setter
 public class PostgreSqlJson implements Callable<Integer>, Closeable {
@@ -44,14 +44,15 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             description = "Interval of saving (in second) of the current read position in the log file. " +
                     "The value must be in the range from 1 to 1000 second")
     long saveInterval;
-    @CommandLine.Option(names = {"-h", "--host"}, description = "The host name of the PostgreSQL server")
+    @CommandLine.Option(names = {"-H", "--host"}, description = "The host name of the PostgreSQL server")
     String host;
     @CommandLine.Option(names = {"-p", "--port"}, defaultValue = "5432", description = "The port number the PostgreSQL server is listening on")
     int port;
-    @CommandLine.Option(names = {"-d", "--database"}, description = "The database name")
-    String database = "postgres";
-    @CommandLine.Option(names = {"-u", "--user"}, description = "The database user on whose behalf the connection is being made")
-    String user = "postgres";
+    @CommandLine.Option(names = {"-d", "--database"}, defaultValue = "postgres", description = "The database name")
+    String database;
+    @CommandLine.Option(names = {"-u", "--user"}, defaultValue = "postgres",
+            description = "The database user on whose behalf the connection is being made")
+    String user;
 
     @CommandLine.Option(names = "--password", arity = "0..1", interactive = true)
     String password = System.getenv("PGPASSWORD");
