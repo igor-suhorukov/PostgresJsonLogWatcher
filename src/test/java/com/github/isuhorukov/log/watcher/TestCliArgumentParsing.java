@@ -18,18 +18,20 @@ public class TestCliArgumentParsing {
     void testDefaultParameters(StdErr out) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             assertEquals(0, postgreSqlJson.saveInterval);
-            assertEquals(0, postgreSqlJson.port);
-            assertNull(postgreSqlJson.database);
-            assertNull(postgreSqlJson.user);
-            assertEquals(0, postgreSqlJson.maximumCacheSize);
+            assertEquals(0, postgreSqlJson.posgreSqlPort);
+            assertNull(postgreSqlJson.posgreSqlDatabase);
+            assertNull(postgreSqlJson.posgreSqlUserName);
+            assertNull(postgreSqlJson.currentLogPositionFile);
+            assertEquals(0, postgreSqlJson.maximumQueryCacheSize);
             //init class with default parameters from picocli annotations
             int failed = new CommandLine(postgreSqlJson).execute();
             assertEquals(2, failed);
             assertEquals(10, postgreSqlJson.saveInterval);
-            assertEquals(5432, postgreSqlJson.port);
-            assertEquals("postgres", postgreSqlJson.database);
-            assertEquals("postgres", postgreSqlJson.user);
-            assertEquals(50000, postgreSqlJson.maximumCacheSize);
+            assertEquals(5432, postgreSqlJson.posgreSqlPort);
+            assertEquals("postgres", postgreSqlJson.posgreSqlDatabase);
+            assertEquals("postgres", postgreSqlJson.posgreSqlUserName);
+            assertEquals(".current_log_position", postgreSqlJson.currentLogPositionFile);
+            assertEquals(50000, postgreSqlJson.maximumQueryCacheSize);
             assertNull(postgreSqlJson.watchDir);
             assertTrue(out.capturedLines().length > 0);
             assertEquals("Missing required parameter: '<watchDir>'", out.capturedLines()[0]);
@@ -61,26 +63,34 @@ public class TestCliArgumentParsing {
             assertTrue(out.capturedLines().length > 0);
             assertEquals("This program reads PostgreSQL DBMS logs in JSON format and sends them to\n" +
                     "OpenTelemetry collector\n" +
-                    "Usage: <main class> [-hV] [--password[=<password>]] [-c=<maximumCacheSize>]\n" +
-                    "                    [-d=<database>] [-H=<host>] [-i=<saveInterval>] [-p=<port>]\n" +
-                    "                    [-u=<user>] <watchDir>\n" +
-                    "      <watchDir>      Path to PostgreSQL log directory in JSON format\n" +
-                    "  -c, --max_cache_size=<maximumCacheSize>\n" +
-                    "                      Database query cache size\n" +
-                    "  -d, --database=<database>\n" +
-                    "                      The database name\n" +
-                    "  -h, --help          Show this help message and exit.\n" +
-                    "  -H, --host=<host>   The host name of the PostgreSQL server\n" +
+                    "Usage: <main class> [-hV] [--password[=<posgreSqlPassword>]]\n" +
+                    "                    [-c=<maximumQueryCacheSize>] [-d=<posgreSqlDatabase>]\n" +
+                    "                    [-H=<posgreSqlHost>] [-i=<saveInterval>]\n" +
+                    "                    [-lp=<currentLogPositionFile>] [-p=<posgreSqlPort>]\n" +
+                    "                    [-u=<posgreSqlUserName>] <watchDir>\n" +
+                    "      <watchDir>   Path to PostgreSQL log directory in JSON format\n" +
+                    "  -c, --max_cache_size=<maximumQueryCacheSize>\n" +
+                    "                   Database query cache size\n" +
+                    "  -d, --database=<posgreSqlDatabase>\n" +
+                    "                   The database name\n" +
+                    "  -h, --help       Show this help message and exit.\n" +
+                    "  -H, --host=<posgreSqlHost>\n" +
+                    "                   The host name of the PostgreSQL server\n" +
                     "  -i, --save_interval=<saveInterval>\n" +
-                    "                      Interval of saving (in second) of the current read\n" +
-                    "                        position in the log file. The value must be in the\n" +
-                    "                        range from 1 to 1000 second\n" +
-                    "  -p, --port=<port>   The port number the PostgreSQL server is listening on\n" +
-                    "      --password[=<password>]\n" +
+                    "                   Interval of saving (in second) of the current read position\n" +
+                    "                     in the log files. The value must be within a range from 1\n" +
+                    "                     till 1000 second\n" +
+                    "      -lp, --log_pos_file=<currentLogPositionFile>\n" +
+                    "                   Path to file to save current processed position in log\n" +
+                    "                     files. Required write capability for this program\n" +
+                    "  -p, --port=<posgreSqlPort>\n" +
+                    "                   The port number the PostgreSQL server is listening on\n" +
+                    "      --password[=<posgreSqlPassword>]\n" +
                     "\n" +
-                    "  -u, --user=<user>   The database user on whose behalf the connection is being\n" +
-                    "                        made\n" +
-                    "  -V, --version       Print version information and exit.\n", out.capturedString());
+                    "  -u, --user=<posgreSqlUserName>\n" +
+                    "                   The database user on whose behalf the connection is being\n" +
+                    "                     made\n" +
+                    "  -V, --version    Print version information and exit.\n", out.capturedString());
         }
     }
 }

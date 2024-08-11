@@ -25,15 +25,18 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
         header = "This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector")
 @Setter
 public class PostgreSqlJson implements Callable<Integer>, Closeable {
+
     public static final String DURATION = "duration: ";
     public static final String MS = " ms";
     public static final String PLAN = "plan:\n";
     public static final String QUERY_ID = "query_id";
     public static final String JSON_SUFFIX = ".json";
-    public static final String CURRENT_LOGGER_POSITION = ".current_logger_position";
-    private static final ObjectMapper mapper = new ObjectMapper();
+
     private static final Logger logger = LoggerFactory.getLogger(PostgreSqlJson.class);
     private static final Logger cliLogger = LoggerFactory.getLogger("cli");
+
+    private static final ObjectMapper mapper = new ObjectMapper();
+
     final Map<String, Long> position = new ConcurrentHashMap<>();
 
     LogEnricher logEnricher = new EnrichmentOff();
@@ -41,25 +44,29 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     @CommandLine.Parameters(index = "0", description = "Path to PostgreSQL log directory in JSON format")
     String watchDir;
     @CommandLine.Option(names = {"-i", "--save_interval"},  defaultValue = "10",
-            description = "Interval of saving (in second) of the current read position in the log file. " +
-                    "The value must be in the range from 1 to 1000 second")
+            description = "Interval of saving (in second) of the current read position in the log files. " +
+                    "The value must be within a range from 1 till 1000 second")
     long saveInterval;
     @CommandLine.Option(names = {"-H", "--host"}, description = "The host name of the PostgreSQL server")
-    String host;
+    String posgreSqlHost;
     @CommandLine.Option(names = {"-p", "--port"}, defaultValue = "5432", description = "The port number the PostgreSQL server is listening on")
-    int port;
+    int posgreSqlPort;
     @CommandLine.Option(names = {"-d", "--database"}, defaultValue = "postgres", description = "The database name")
-    String database;
+    String posgreSqlDatabase;
     @CommandLine.Option(names = {"-u", "--user"}, defaultValue = "postgres",
             description = "The database user on whose behalf the connection is being made")
-    String user;
+    String posgreSqlUserName;
 
     @CommandLine.Option(names = "--password", arity = "0..1", interactive = true)
-    String password = System.getenv("PGPASSWORD");
+    String posgreSqlPassword = System.getenv("PGPASSWORD");
 
     @CommandLine.Option(names = {"-c", "--max_cache_size"},  defaultValue = "50000",
             description = "Database query cache size")
-    int maximumCacheSize;
+    int maximumQueryCacheSize;
+    @CommandLine.Option(names = {"-lp", "--log_pos_file"}, defaultValue = ".current_log_position",
+            description = "Path to file to save current processed position in log files. " +
+                    "Required write capability for this program")
+    String currentLogPositionFile;
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -113,9 +120,9 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     }
 
     void initLogEnricher() {
-        if(host!=null && !host.isEmpty()){
+        if(posgreSqlHost !=null && !posgreSqlHost.isEmpty()){
             try {
-                logEnricher = new LogEnricherPostgreSql(host, port, database, user, password, maximumCacheSize);
+                logEnricher = new LogEnricherPostgreSql(posgreSqlHost, posgreSqlPort, posgreSqlDatabase, posgreSqlUserName, posgreSqlPassword, maximumQueryCacheSize);
             } catch (Exception e) {
                 cliLogger.error("Failed to use log enricher {} for postgres, so I work in mode without log enrichment",
                         LogEnricherPostgreSql.class.getSimpleName(), e);
@@ -255,8 +262,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         }
     }
     protected void positionFileTasks(long saveInterval) throws IOException {
-        if(new File(CURRENT_LOGGER_POSITION).exists()) {
-            position.putAll(mapper.readValue(new File(CURRENT_LOGGER_POSITION),
+        if(new File(currentLogPositionFile).exists()) {
+            position.putAll(mapper.readValue(new File(currentLogPositionFile),
                     new TypeReference<ConcurrentHashMap<String, Long>>() {}));
         }
         new Timer("LogPositionSaver", true).schedule(new TimerTask() {
@@ -273,7 +280,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             if(position.isEmpty()){
                 return;
             }
-            try (FileOutputStream currentPostitionFile = new FileOutputStream(CURRENT_LOGGER_POSITION)){
+            try (FileOutputStream currentPostitionFile = new FileOutputStream(currentLogPositionFile)){
                 mapper.writeValue(currentPostitionFile,new TreeMap<>(position));
             }
         } catch (Exception e) {

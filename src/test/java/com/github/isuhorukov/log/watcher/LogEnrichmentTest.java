@@ -48,8 +48,8 @@ public class LogEnrichmentTest {
     void initLogEnricherWithDbHostWoConnection(){
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.logEnricher = null;
-            postgreSqlJson.setHost("127.0.0.1");
-            postgreSqlJson.setPort(7432);
+            postgreSqlJson.setPosgreSqlHost("127.0.0.1");
+            postgreSqlJson.setPosgreSqlPort(7432);
             postgreSqlJson.initLogEnricher();
             assertNotNull(postgreSqlJson.logEnricher);
             assertEquals("EnrichmentOff", postgreSqlJson.logEnricher.getClass().getSimpleName());
@@ -68,11 +68,11 @@ public class LogEnrichmentTest {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             server.start();
             postgreSqlJson.logEnricher = null;
-            postgreSqlJson.setHost("127.0.0.1");
-            postgreSqlJson.setPort(7432);
-            postgreSqlJson.setUser("postgres");
-            postgreSqlJson.setDatabase("postgres");
-            postgreSqlJson.setPassword(UUID.randomUUID().toString());
+            postgreSqlJson.setPosgreSqlHost("127.0.0.1");
+            postgreSqlJson.setPosgreSqlPort(7432);
+            postgreSqlJson.setPosgreSqlUserName("postgres");
+            postgreSqlJson.setPosgreSqlDatabase("postgres");
+            postgreSqlJson.setPosgreSqlPassword(UUID.randomUUID().toString());
             postgreSqlJson.initLogEnricher();
             assertNotNull(postgreSqlJson.logEnricher);
             assertEquals("EnrichmentOff", postgreSqlJson.logEnricher.getClass().getSimpleName());
@@ -101,11 +101,11 @@ public class LogEnrichmentTest {
                 statement.executeUpdate("CREATE TABLE pg_stat_statements(queryid bigint, query text)");
 
                 postgreSqlJson.logEnricher = null;
-                postgreSqlJson.setHost("127.0.0.1");
-                postgreSqlJson.setPort(7432);
-                postgreSqlJson.setUser("postgres");
-                postgreSqlJson.setDatabase("postgres");
-                postgreSqlJson.setPassword(passwordForTest);
+                postgreSqlJson.setPosgreSqlHost("127.0.0.1");
+                postgreSqlJson.setPosgreSqlPort(7432);
+                postgreSqlJson.setPosgreSqlUserName("postgres");
+                postgreSqlJson.setPosgreSqlDatabase("postgres");
+                postgreSqlJson.setPosgreSqlPassword(passwordForTest);
                 postgreSqlJson.initLogEnricher();
                 assertNotNull(postgreSqlJson.logEnricher);
                 assertEquals("log_watcher_enricher", postgreSqlJson.logEnricher.enricherApplicationName());
