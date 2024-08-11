@@ -99,7 +99,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             return 1;
         }
         initLogEnricher();
-        positionFileTasks(saveInterval);
+        positionFileTasks();
         initialLogImport(sourceDirectory);
         Path dirToWatch = Paths.get(watchDir);
         try (WatchService watchService = getWatchService()) {
@@ -261,7 +261,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                 throw new IllegalArgumentException(severity);
         }
     }
-    protected void positionFileTasks(long saveInterval) throws IOException {
+    protected Thread positionFileTasks() throws IOException {
         if(new File(currentLogPositionFile).exists()) {
             position.putAll(mapper.readValue(new File(currentLogPositionFile),
                     new TypeReference<ConcurrentHashMap<String, Long>>() {}));
@@ -272,7 +272,9 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                 saveLogFilesPosition();
             }
         }, TimeUnit.SECONDS.toMillis(saveInterval), TimeUnit.SECONDS.toMillis(saveInterval));
-        Runtime.getRuntime().addShutdownHook(new Thread(this::saveLogFilesPosition));
+        Thread savePostitionShutdownHook = new Thread(this::saveLogFilesPosition);
+        Runtime.getRuntime().addShutdownHook(savePostitionShutdownHook);
+        return savePostitionShutdownHook;
     }
 
     protected synchronized void saveLogFilesPosition() {

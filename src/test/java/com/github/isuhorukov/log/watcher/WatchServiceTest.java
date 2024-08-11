@@ -27,8 +27,9 @@ public class WatchServiceTest {
     public LogCapture logCapture = LogCapture.forCurrentPackage();
     private final PostgreSqlJson postgreSqlJson = new PostgreSqlJson(){
         @Override
-        protected void positionFileTasks(long saveInterval) throws IOException {
+        protected Thread positionFileTasks() throws IOException {
             //do nothing in this test
+            return Thread.currentThread();
         }
 
         @Override
