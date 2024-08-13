@@ -223,9 +223,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             Map.Entry<String, JsonNode> entry = fields.next();
             String key = entry.getKey();
             String value = entry.getValue().asText();
-            if("error_severity".equals(key) && (value.equals("INFO") || value.equals("ERROR")
-                    || value.equals("DEBUG") || value.equals("TRACE")) ||
-                    "message".equals(key) ||
+            if("message".equals(key) ||
                     (QUERY_ID.equals(key) && "0".equals(value)) //skip empty query_id
             ){
                 continue;
