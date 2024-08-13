@@ -17,6 +17,9 @@ import java.nio.file.*;
 import java.util.Collections;
 
 import static de.dm.infrastructure.logcapture.ExpectedKeyValue.keyValue;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
+import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -92,5 +95,24 @@ public class WatchServiceTest {
         postgreSqlJson.setSaveInterval(saveInterval);
         postgreSqlJson.watchPostgreSqlLogs();
         logCapture.assertNotLogged(LogExpectation.info());
+    }
+
+    @Test
+    void testRegisterWatchEvent() throws IOException {
+        try(PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+            WatchService watchService = mock(WatchService.class);
+            Path dirToWatch = mock(Path.class);
+            postgreSqlJson.registerWatchEvent(dirToWatch, watchService);
+            verify(dirToWatch).register(eq(watchService), eq(ENTRY_CREATE), eq(ENTRY_MODIFY));
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    void testWatchService() {
+        try(PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+            WatchService watchService = postgreSqlJson.getWatchService();
+            assertNotNull(watchService);
+        }
     }
 }

@@ -21,7 +21,7 @@ import java.util.concurrent.TimeUnit;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
-@CommandLine.Command(mixinStandardHelpOptions = true, version = "1.0.0",
+@CommandLine.Command(mixinStandardHelpOptions = true, versionProvider = VersionProvider.class,
         header = "This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector")
 @Setter
 public class PostgreSqlJson implements Callable<Integer>, Closeable {
@@ -71,7 +71,10 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     @SneakyThrows
     public static void main(String[] args) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
-            System.exit(new CommandLine(postgreSqlJson).execute(args));
+            int exitCode = new CommandLine(postgreSqlJson).execute(args);
+            if(!Boolean.getBoolean("skipProcessExit")){
+                System.exit(exitCode);
+            }
         }
     }
 
@@ -164,13 +167,33 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     @SneakyThrows
     void parseLogLine(String line, String logName){
         JsonNode jsonNode = mapper.readTree(line);
+        Level severity = getSeverity(jsonNode.at("/error_severity").asText());
+        switch (severity){
+            case TRACE:
+                if(!logger.isTraceEnabled()) return;
+                break;
+            case DEBUG:
+                if(!logger.isDebugEnabled()) return;
+                break;
+            case INFO:
+                if(!logger.isInfoEnabled()) return;
+                break;
+            case WARN:
+                if(!logger.isWarnEnabled()) return;
+                break;
+            case ERROR:
+                if(!logger.isErrorEnabled()) return;
+                break;
+        }
+
         Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
 
         String message = jsonNode.at("/message").asText();
         if(logEnricher.enricherApplicationName()!=null && message.contains(logEnricher.enricherApplicationName())){
             return;
         }
-        LoggingEventBuilder loggingEventBuilder = logger.atLevel(getSeverity(jsonNode.at("/error_severity").asText()));
+
+        LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);
         if(message.startsWith(DURATION)){
             int msEndIndex = message.indexOf(MS);
             double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));
@@ -225,40 +248,38 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     }
 
     private static Object getValue(JsonNode entryValue) {
-        Object value;
         switch (entryValue.getNodeType()){
-            case BOOLEAN:
-                value = entryValue.booleanValue();
-                break;
             case NUMBER:
                 switch (entryValue.numberType()){
                     case INT:
-                        value = entryValue.asInt();
-                        break;
+                        return entryValue.asInt();
                     case LONG:
-                        value = entryValue.asLong();
-                        break;
-                    default:
-                        value = entryValue.asText();
-                        break;
+                        return entryValue.asLong();
                 }
-                break;
+            case STRING:
             default:
-                value = entryValue.asText();
-                break;
+                return entryValue.asText();
         }
-        return value;
     }
 
     private static Level getSeverity(String severity) {
+        //https://www.postgresql.org/docs/current/runtime-config-logging.html#RUNTIME-CONFIG-SEVERITY-LEVELS
         switch (severity){
-            case "LOG": return Level.INFO;
-            case "ERROR": return Level.ERROR;
-            case "DEBUG": return Level.DEBUG;
-            case "TRACE": return Level.TRACE;
-            case "FATAL": return Level.ERROR;
+            case "DEBUG":
+            case "DEBUG5":
+            case "DEBUG4":
+            case "DEBUG3":
+            case "DEBUG2":
+            case "DEBUG1": return Level.DEBUG;
+            case "LOG":
+            case "INFO":
+            case "NOTICE": return Level.INFO;
+            case "WARNING": return Level.WARN;
+            case "ERROR":
+            case "FATAL":
+            case "PANIC": return Level.ERROR;
             default:
-                throw new IllegalArgumentException(severity);
+                return Level.TRACE;
         }
     }
     protected Thread positionFileTasks() throws IOException {

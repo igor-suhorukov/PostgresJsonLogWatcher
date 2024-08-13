@@ -17,12 +17,11 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static de.dm.infrastructure.logcapture.ExpectedKeyValue.keyValue;
-import static de.dm.infrastructure.logcapture.LogExpectation.error;
-import static de.dm.infrastructure.logcapture.LogExpectation.info;
-import static org.junit.jupiter.api.Assertions.*;
+import static de.dm.infrastructure.logcapture.LogExpectation.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PostgreSqlJsonTest {
 
@@ -188,6 +187,38 @@ public class PostgreSqlJsonTest {
         logCapture.assertLogged(info(keyValue("bind", true)));
     }
 
+    @Test
+    void logDebug(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-13 13:44:44.299 UTC\",\"pid\":28," +
+                "\"session_id\":\"66bb5dd8.1c\",\"line_num\":1385,\"session_start\":\"2024-08-13 13:21:28 UTC\"," +
+                "\"txid\":0,\"error_severity\":\"DEBUG\",\"message\":\"proc_exit(-1): 0 callbacks to make\"," +
+                "\"backend_type\":\"checkpointer\",\"query_id\":0}","postgresql-2024-08-13_072901.json");
+        logCapture.assertLogged(debug("proc_exit", keyValue("line_num", 1385)));
+    }
+
+    @Test
+    void logWarning(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-13 13:28:46.649 UTC\",\"user\":\"postgres\"," +
+                "\"dbname\":\"rzd\",\"pid\":47,\"remote_host\":\"172.17.0.1\",\"remote_port\":58516," +
+                "\"session_id\":\"66bb5f5d.2f\",\"line_num\":2954,\"ps\":\"CREATE PUBLICATION\"," +
+                "\"session_start\":\"2024-08-13 13:27:57 UTC\",\"vxid\":\"3/621\",\"txid\":1347," +
+                "\"error_severity\":\"WARNING\",\"state_code\":\"55000\"," +
+                "\"message\":\"wal_level is insufficient to publish logical changes\"," +
+                "\"hint\":\"Set wal_level to \\\"logical\\\" before creating subscriptions.\"," +
+                "\"application_name\":\"psql\",\"backend_type\":\"client backend\"," +
+                "\"query_id\":9036091638244051957}","postgresql-2024-08-13_072901.json");
+        logCapture.assertLogged(warn("wal_level is insufficient to publish logical changes",
+                keyValue("state_code", "55000")));
+    }
+
+    @Test
+    void logUnknowSeverity(){
+        logWatcher.parseLogLine("{\"timestamp\":\"2024-08-13 13:44:44.299 UTC\",\"pid\":28," +
+                "\"session_id\":\"66bb5dd8.1c\",\"line_num\":125,\"session_start\":\"2024-08-13 13:21:28 UTC\"," +
+                "\"txid\":0,\"error_severity\":\"Unexpected\",\"message\":\"some new message\"," +
+                "\"backend_type\":\"checkpointer\",\"query_id\":0}","postgresql-2024-08-13_072901.json");
+        logCapture.assertLogged(trace("some new message", keyValue("line_num", 125)));
+    }
     @Test
     @SneakyThrows
     void initialLogImport(@TempDir Path tempDir) {

@@ -56,12 +56,10 @@ public class TestCliArgumentParsing {
     @Test
     @SneakyThrows
     void testHelpParameter(StdOut out) {
-        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
-            //init class with default parameters from picocli annotations
-            int failed = new CommandLine(postgreSqlJson).execute("--help");
-            assertEquals(0, failed);
-            assertTrue(out.capturedLines().length > 0);
-            assertEquals("This program reads PostgreSQL DBMS logs in JSON format and sends them to\n" +
+        System.setProperty("skipProcessExit","true");
+        PostgreSqlJson.main(new String[]{"--help"});
+        assertTrue(out.capturedLines().length > 0);
+        assertEquals("This program reads PostgreSQL DBMS logs in JSON format and sends them to\n" +
                     "OpenTelemetry collector\n" +
                     "Usage: <main class> [-hV] [--password[=<posgreSqlPassword>]]\n" +
                     "                    [-c=<maximumQueryCacheSize>] [-d=<posgreSqlDatabase>]\n" +
@@ -91,6 +89,7 @@ public class TestCliArgumentParsing {
                     "                   The database user on whose behalf the connection is being\n" +
                     "                     made\n" +
                     "  -V, --version    Print version information and exit.\n", out.capturedString());
-        }
+        PostgreSqlJson.main(new String[]{"--version"});
+        assertTrue(out.capturedLines().length > 0); //because of different behaviour in IDE and Maven tests
     }
 }

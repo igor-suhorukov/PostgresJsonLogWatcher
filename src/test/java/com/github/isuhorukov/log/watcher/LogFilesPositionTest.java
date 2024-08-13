@@ -39,9 +39,10 @@ public class LogFilesPositionTest {
                 getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);
 
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
-            postgreSqlJson.saveInterval = 10;
+            postgreSqlJson.saveInterval = 1;
             postgreSqlJson.currentLogPositionFile = positionFile.toFile().getAbsolutePath();
             Thread thread = postgreSqlJson.positionFileTasks();
+            Thread.sleep(1100);
             Runtime.getRuntime().removeShutdownHook(thread);
             assertEquals(136172L,postgreSqlJson.position.get("postgresql-2024-08-01_065552.json"));
         }

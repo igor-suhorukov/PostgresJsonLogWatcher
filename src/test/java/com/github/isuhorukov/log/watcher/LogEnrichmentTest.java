@@ -3,6 +3,7 @@ package com.github.isuhorukov.log.watcher;
 import de.dm.infrastructure.logcapture.LogCapture;
 import lombok.SneakyThrows;
 import org.h2.tools.Server;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -84,6 +85,7 @@ public class LogEnrichmentTest {
     }
     @Test
     @SneakyThrows
+    @DisplayName("Test LogEnricher with emulated PostgreSQL database with pg_stat_statements extension")
     void initLogEnricherWithDbHostWithPgStatStatement(){
         String passwordForTest = UUID.randomUUID().toString();
 
@@ -97,8 +99,7 @@ public class LogEnrichmentTest {
                     "postgres",passwordForTest);
                  Statement statement = connection.createStatement()){
 
-                //emulate pg_stat_statements
-                statement.executeUpdate("CREATE TABLE pg_stat_statements(queryid bigint, query text)");
+                statement.executeUpdate("CREATE TABLE pg_stat_statements(queryid bigint, query text) /* emulate pg_stat_statements */");
 
                 postgreSqlJson.logEnricher = null;
                 postgreSqlJson.setPosgreSqlHost("127.0.0.1");
@@ -119,12 +120,14 @@ public class LogEnrichmentTest {
                 assertNull(postgreSqlJson.logEnricher.getStatement("abc"));
                 assertNull(postgreSqlJson.logEnricher.getStatement("7"));
                 statement.executeUpdate(
-                        "INSERT INTO pg_stat_statements(queryid,query) VALUES (1024, 'select version()')");
+                        "INSERT INTO pg_stat_statements(queryid,query) VALUES (1024, 'select version()')" +
+                                "/* emulate pg_stat_statements */");
                 assertEquals("select version()", postgreSqlJson.logEnricher.getStatement("1024"));
 
                 statement.executeUpdate(
                         "INSERT INTO pg_stat_statements(queryid,query) " +
-                                "VALUES (-3416356442043621232, 'SELECT pg_sleep($1)')");
+                                "VALUES (-3416356442043621232, 'SELECT pg_sleep($1)')" +
+                                "/* emulate pg_stat_statements */");
                 postgreSqlJson.parseLogLine(
                         "{\"timestamp\":\"2024-08-01 06:58:01.088 UTC\",\"user\":\"postgres\"," +
                         "\"dbname\":\"osmworld\",\"pid\":162,\"remote_host\":\"172.17.0.1\",\"remote_port\":60944," +
