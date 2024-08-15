@@ -110,7 +110,24 @@
                     <layout>ZIP</layout>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <taglet>org.jdrupes.taglets.plantUml.PlantUml</taglet>
+                    <tagletArtifact>
+                        <groupId>com.github.igor-suhorukov</groupId>
+                        <artifactId>PlantUmlJavadocTaglet</artifactId>
+                        <version>0.1</version>
+                    </tagletArtifact>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
-
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
 </project>
