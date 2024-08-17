@@ -8,11 +8,25 @@
     <artifactId>pglogparser</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <description>This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector</description>
+
+    <issueManagement>
+        <url>https://github.com/igor-suhorukov/PostgresJsonLogWatcher/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <scm>
+        <url>https://github.com/igor-suhorukov/PostgresJsonLogWatcher</url>
+        <connection>scm:git:git@github.com:igor-suhorukov/PostgresJsonLogWatcher.git</connection>
+    </scm>
+
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <jacoco.version>0.8.12</jacoco.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>info.picocli</groupId>
@@ -123,8 +137,65 @@
                     </tagletArtifact>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>default-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>default-report</id>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-site-plugin</artifactId>
+                <version>4.0.0-M16</version>
+            </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <taglet>org.jdrupes.taglets.plantUml.PlantUml</taglet>
+                    <additionalJOption>-J-Dsequence.uml.basepath=${project.basedir}/doc/diagram</additionalJOption>
+                    <tagletArtifact>
+                        <groupId>com.github.igor-suhorukov</groupId>
+                        <artifactId>PlantUmlJavadocTaglet</artifactId>
+                        <version>0.1.2</version>
+                    </tagletArtifact>
+                </configuration>
+            </plugin>
+        </plugins>
+    </reporting>
     <repositories>
         <repository>
             <id>jitpack.io</id>
