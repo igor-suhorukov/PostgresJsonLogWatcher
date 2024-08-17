@@ -1,0 +1,22 @@
+@startuml
+
+participant LogFilesPositionTest as "LogFilesPositionTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant EnrichmentOff as "EnrichmentOff"
+  [->LogFilesPositionTest: savePositionToInvalidPath <color:gray> 0.683 ms</color>
+  activate LogFilesPositionTest
+    LogFilesPositionTest->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.295 ms</color>
+    activate PostgreSqlJson
+    LogFilesPositionTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+    LogFilesPositionTest->PostgreSqlJson: close <color:gray> 0.0345 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0126 ms</color>
+      activate EnrichmentOff
+      PostgreSqlJson<--EnrichmentOff: void
+      deactivate EnrichmentOff
+    LogFilesPositionTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--LogFilesPositionTest: void
+  deactivate LogFilesPositionTest
+@enduml

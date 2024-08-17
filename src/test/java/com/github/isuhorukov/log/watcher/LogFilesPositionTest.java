@@ -19,9 +19,13 @@ public class LogFilesPositionTest {
 
     @RegisterExtension
     public LogCapture logCapture = LogCapture.forPackages("cli");
+
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void savePositionToInvalidPath(@TempDir Path tempDir) {
+    public void savePositionToInvalidPath(@TempDir Path tempDir) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
             postgreSqlJson.currentLogPositionFile = tempDir.toFile().getAbsolutePath();
             postgreSqlJson.position.put("abc.json",Long.MAX_VALUE);
@@ -31,9 +35,12 @@ public class LogFilesPositionTest {
         }
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void positionFileTasks(@TempDir Path tempDir) {
+    public void positionFileTasks(@TempDir Path tempDir) {
         Path positionFile = Files.createFile(tempDir.resolve("pos_file"));
         Files.write(positionFile, "{\"postgresql-2024-08-01_065552.json\":136172}".
                 getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);

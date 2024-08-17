@@ -1,0 +1,28 @@
+@startuml
+
+participant ValidateParameterTest as "ValidateParameterTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant EnrichmentOff as "EnrichmentOff"
+  [->ValidateParameterTest: intervalOutOfRange <color:gray> 0.311 ms</color>
+  activate ValidateParameterTest
+    Loop 2 times <color:gray> 0.213 ms</color>
+      ValidateParameterTest->PostgreSqlJson: call <color:gray> 0.213 ms</color>
+      activate PostgreSqlJson
+        PostgreSqlJson->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.123 ms</color>
+        activate PostgreSqlJson
+        PostgreSqlJson<--PostgreSqlJson: java.lang.Integer
+        deactivate PostgreSqlJson
+      ValidateParameterTest<--PostgreSqlJson: java.lang.Integer
+      deactivate PostgreSqlJson
+    End
+    ValidateParameterTest->PostgreSqlJson: close <color:gray> 0.0306 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.00936 ms</color>
+      activate EnrichmentOff
+      PostgreSqlJson<--EnrichmentOff: void
+      deactivate EnrichmentOff
+    ValidateParameterTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--ValidateParameterTest: void
+  deactivate ValidateParameterTest
+@enduml

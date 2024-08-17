@@ -1,0 +1,43 @@
+@startuml
+
+participant WatchServiceTest as "WatchServiceTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant WatchServiceTest_1 as "WatchServiceTest$1"
+participant EnrichmentOff as "EnrichmentOff"
+  [->WatchServiceTest: testWatchService <color:gray> 1.07 ms</color>
+  activate WatchServiceTest
+    WatchServiceTest->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.694 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 0.0251 ms</color>
+      activate PostgreSqlJson
+      PostgreSqlJson<--PostgreSqlJson: void
+      deactivate PostgreSqlJson
+      PostgreSqlJson->WatchServiceTest_1: positionFileTasks <color:gray> 0.0129 ms</color>
+      activate WatchServiceTest_1
+      PostgreSqlJson<--WatchServiceTest_1: java.lang.Thread
+      deactivate WatchServiceTest_1
+      PostgreSqlJson->WatchServiceTest_1: initialLogImport <color:gray> 0.0196 ms</color>
+      activate WatchServiceTest_1
+      PostgreSqlJson<--WatchServiceTest_1: void
+      deactivate WatchServiceTest_1
+      PostgreSqlJson->WatchServiceTest_1: registerWatchEvent <color:gray> 0.0108 ms</color>
+      activate WatchServiceTest_1
+      PostgreSqlJson<--WatchServiceTest_1: void
+      deactivate WatchServiceTest_1
+      PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 0.266 ms</color>
+      activate PostgreSqlJson
+        PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.157 ms</color>
+        activate PostgreSqlJson
+          PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0397 ms</color>
+          activate EnrichmentOff
+          PostgreSqlJson<--EnrichmentOff: void
+          deactivate EnrichmentOff
+        PostgreSqlJson<--PostgreSqlJson: void
+        deactivate PostgreSqlJson
+      PostgreSqlJson<--PostgreSqlJson: void
+      deactivate PostgreSqlJson
+    WatchServiceTest<--PostgreSqlJson: java.lang.Integer
+    deactivate PostgreSqlJson
+  [<--WatchServiceTest: void
+  deactivate WatchServiceTest
+@enduml

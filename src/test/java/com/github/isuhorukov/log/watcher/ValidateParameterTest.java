@@ -18,18 +18,24 @@ public class ValidateParameterTest {
     @RegisterExtension
     public LogCapture logCapture = LogCapture.forPackages("cli");
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void missingWatchDir() {
+    public void missingWatchDir() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             assertEquals(1, postgreSqlJson.call());
         }
         logCapture.assertLogged(error("Path to PostgreSQL log directory expected"));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void nonExistingWatchDir() {
+    public void nonExistingWatchDir() {
         String watchDir = UUID.randomUUID().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
@@ -38,9 +44,12 @@ public class ValidateParameterTest {
         logCapture.assertLogged(error("PostgreSQL directory '"+watchDir+"' with JSON logs not exist"));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void nonDirectoryWatchDir(@TempDir Path tempDir) {
+    public void nonDirectoryWatchDir(@TempDir Path tempDir) {
         String watchDir = Files.createFile(tempDir.resolve("tempfile.txt")).toAbsolutePath().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
@@ -49,9 +58,12 @@ public class ValidateParameterTest {
         logCapture.assertLogged(error("Path '"+watchDir+"' is not directory"));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void intervalOutOfRange(@TempDir Path tempDir) {
+    public void intervalOutOfRange(@TempDir Path tempDir) {
         String watchDir = tempDir.toAbsolutePath().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);

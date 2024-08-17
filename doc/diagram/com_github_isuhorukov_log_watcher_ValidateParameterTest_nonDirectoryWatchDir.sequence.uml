@@ -1,0 +1,26 @@
+@startuml
+
+participant ValidateParameterTest as "ValidateParameterTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant EnrichmentOff as "EnrichmentOff"
+  [->ValidateParameterTest: nonDirectoryWatchDir <color:gray> 0.241 ms</color>
+  activate ValidateParameterTest
+    ValidateParameterTest->PostgreSqlJson: call <color:gray> 0.141 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.0818 ms</color>
+      activate PostgreSqlJson
+      PostgreSqlJson<--PostgreSqlJson: java.lang.Integer
+      deactivate PostgreSqlJson
+    ValidateParameterTest<--PostgreSqlJson: java.lang.Integer
+    deactivate PostgreSqlJson
+    ValidateParameterTest->PostgreSqlJson: close <color:gray> 0.0326 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0105 ms</color>
+      activate EnrichmentOff
+      PostgreSqlJson<--EnrichmentOff: void
+      deactivate EnrichmentOff
+    ValidateParameterTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--ValidateParameterTest: void
+  deactivate ValidateParameterTest
+@enduml

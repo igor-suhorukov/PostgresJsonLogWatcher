@@ -35,8 +35,11 @@ public class PostgreSqlJsonTest {
         logWatcher.close();
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void parseLogLine() {
+    public void parseLogLine() {
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-04 14:05:12.689 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":1411,\"remote_host\":\"172.17.0.1\",\"remote_port\":41742," +
                 "\"session_id\":\"66af8a98.583\",\"line_num\":14,\"ps\":\"SELECT\"," +
@@ -57,8 +60,11 @@ public class PostgreSqlJsonTest {
         ));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void parseStatement(){
+    public void parseStatement(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-01 13:31:52.169 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":162,\"remote_host\":\"172.17.0.1\",\"remote_port\":60944," +
                 "\"session_id\":\"66ab31f2.a2\",\"line_num\":41,\"ps\":\"idle\"," +
@@ -68,8 +74,12 @@ public class PostgreSqlJsonTest {
                 "postgresql-2024-08-04_072901.json");
         logCapture.assertLogged(info("statement: SELECT 1;", keyValue("statement",true)));
     }
+
+    /**
+     * @plantUml
+     */
     @Test
-    void parseLogPlan(){
+    public void parseLogPlan(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-04 14:05:12.850 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":1411,\"remote_host\":\"172.17.0.1\",\"remote_port\":41742," +
                 "\"session_id\":\"66af8a98.583\",\"line_num\":16,\"ps\":\"SELECT\"," +
@@ -127,15 +137,21 @@ public class PostgreSqlJsonTest {
                 "  Options: Inlining false, Optimization false, Expressions true, Deforming true")));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logWithQueryId(){
+    public void logWithQueryId(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-01 06:55:52.165 UTC\",\"user\":\"postgres\",\"dbname\":\"postgres\",\"pid\":60,\"remote_host\":\"[local]\",\"session_id\":\"66ab3178.3c\",\"line_num\":4,\"ps\":\"SELECT\",\"session_start\":\"2024-08-01 06:55:52 UTC\",\"vxid\":\"3/0\",\"txid\":0,\"error_severity\":\"LOG\",\"message\":\"duration: 0.795 ms\",\"application_name\":\"psql\",\"backend_type\":\"client backend\",\"query_id\":7911002058943960455}",
                 "postgresql-2024-08-04_072901.json");
         logCapture.assertLogged(info(keyValue("duration",0.795), keyValue("query_id",7911002058943960455L)));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logFatal(){
+    public void logFatal(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-02 08:15:46.109 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":37,\"remote_host\":\"172.17.0.1\",\"remote_port\":34616," +
                 "\"session_id\":\"66ab92a0.25\",\"line_num\":39,\"ps\":\"idle\"," +
@@ -148,8 +164,11 @@ public class PostgreSqlJsonTest {
                                     keyValue("error_severity","FATAL")));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logError(){
+    public void logError(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-01 13:44:54.729 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":162,\"remote_host\":\"172.17.0.1\",\"remote_port\":60944," +
                 "\"session_id\":\"66ab31f2.a2\",\"line_num\":54,\"ps\":\"idle\"," +
@@ -162,8 +181,11 @@ public class PostgreSqlJsonTest {
         logCapture.assertLogged(error("syntax error at or near"));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logParse(){
+    public void logParse(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-03 21:43:39.173 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":125,\"remote_host\":\"172.17.0.1\",\"remote_port\":43742," +
                 "\"session_id\":\"66aea48a.7d\",\"line_num\":4,\"ps\":\"PARSE\"," +
@@ -175,8 +197,11 @@ public class PostgreSqlJsonTest {
         logCapture.assertLogged(info(keyValue("parse", true)));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logBind(){
+    public void logBind(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-03 21:43:39.173 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"osmworld\",\"pid\":125,\"remote_host\":\"172.17.0.1\",\"remote_port\":43742," +
                 "\"session_id\":\"66aea48a.7d\",\"line_num\":5,\"ps\":\"BIND\"," +
@@ -187,8 +212,11 @@ public class PostgreSqlJsonTest {
         logCapture.assertLogged(info(keyValue("bind", true)));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logDebug(){
+    public void logDebug(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-13 13:44:44.299 UTC\",\"pid\":28," +
                 "\"session_id\":\"66bb5dd8.1c\",\"line_num\":1385,\"session_start\":\"2024-08-13 13:21:28 UTC\"," +
                 "\"txid\":0,\"error_severity\":\"DEBUG\",\"message\":\"proc_exit(-1): 0 callbacks to make\"," +
@@ -196,8 +224,11 @@ public class PostgreSqlJsonTest {
         logCapture.assertLogged(debug("proc_exit", keyValue("line_num", 1385)));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logWarning(){
+    public void logWarning(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-13 13:28:46.649 UTC\",\"user\":\"postgres\"," +
                 "\"dbname\":\"rzd\",\"pid\":47,\"remote_host\":\"172.17.0.1\",\"remote_port\":58516," +
                 "\"session_id\":\"66bb5f5d.2f\",\"line_num\":2954,\"ps\":\"CREATE PUBLICATION\"," +
@@ -211,17 +242,23 @@ public class PostgreSqlJsonTest {
                 keyValue("state_code", "55000")));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void logUnknowSeverity(){
+    public void logUnknowSeverity(){
         logWatcher.parseLogLine("{\"timestamp\":\"2024-08-13 13:44:44.299 UTC\",\"pid\":28," +
                 "\"session_id\":\"66bb5dd8.1c\",\"line_num\":125,\"session_start\":\"2024-08-13 13:21:28 UTC\"," +
                 "\"txid\":0,\"error_severity\":\"Unexpected\",\"message\":\"some new message\"," +
                 "\"backend_type\":\"checkpointer\",\"query_id\":0}","postgresql-2024-08-13_072901.json");
         logCapture.assertLogged(trace("some new message", keyValue("line_num", 125)));
     }
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void initialLogImport(@TempDir Path tempDir) {
+    public void initialLogImport(@TempDir Path tempDir) {
         prepareTwoTemporaryJsonFile(tempDir);
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
             assertEquals(0, postgreSqlJson.position.keySet().size());
@@ -232,9 +269,12 @@ public class PostgreSqlJsonTest {
         }
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void testSavePosition(@TempDir Path tempDir) {
+    public void testSavePosition(@TempDir Path tempDir) {
         prepareTwoTemporaryJsonFile(tempDir);
         prepareOneTemporaryJsonFile(tempDir, "postgresql-2024-08-06_050311.json",
                 "{\"timestamp\":\"2024-08-06 21:43:39.173 UTC\",\"error_severity\":\"LOG\"," +

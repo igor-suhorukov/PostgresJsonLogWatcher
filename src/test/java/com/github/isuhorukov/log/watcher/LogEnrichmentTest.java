@@ -24,18 +24,24 @@ public class LogEnrichmentTest {
     @RegisterExtension
     public LogCapture pgLogCapture = LogCapture.forCurrentPackage();
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void defaultEnrichmentOff() {
+    public void defaultEnrichmentOff() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             assertNotNull(postgreSqlJson.logEnricher);
             assertEquals("EnrichmentOff", postgreSqlJson.logEnricher.getClass().getSimpleName());
         }
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void initLogEnricherWoDbHost(){
+    public void initLogEnricherWoDbHost(){
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.logEnricher = null;
             postgreSqlJson.initLogEnricher();
@@ -44,9 +50,12 @@ public class LogEnrichmentTest {
         }
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void initLogEnricherWithDbHostWoConnection(){
+    public void initLogEnricherWithDbHostWoConnection(){
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.logEnricher = null;
             postgreSqlJson.setPosgreSqlHost("127.0.0.1");
@@ -61,9 +70,12 @@ public class LogEnrichmentTest {
         }
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void initLogEnricherWithDbHostWoPgStatStatement(){
+    public void initLogEnricherWithDbHostWoPgStatStatement(){
         Server server = Server.createPgServer("-pgPort", "7432",
                 "-ifNotExists","-pgAllowOthers" ,"-key", "postgres", "mem:postgres");
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
@@ -83,10 +95,14 @@ public class LogEnrichmentTest {
             server.stop();
         }
     }
+
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
     @DisplayName("Test LogEnricher with emulated PostgreSQL database with pg_stat_statements extension")
-    void initLogEnricherWithDbHostWithPgStatStatement(){
+    public void initLogEnricherWithDbHostWithPgStatStatement(){
         String passwordForTest = UUID.randomUUID().toString();
 
         Server server = Server.createPgServer("-pgPort", "7432",

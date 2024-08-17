@@ -1,0 +1,74 @@
+@startuml
+
+participant LogEnrichmentTest as "LogEnrichmentTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant LogEnricherPostgreSql as "LogEnricherPostgreSql"
+participant Database as "Database"
+  [->LogEnrichmentTest: initLogEnricherWithDbHostWithPgStatStatement <color:gray> 161 ms</color>
+  activate LogEnrichmentTest
+    LogEnrichmentTest->Database: CREATE TABLE pg_stat_statements(queryid bigint, qu <color:gray> 0.85 ms</color>
+    Note right
+CREATE TABLE pg_stat_statements(queryid bigint, query text) -- emulate
+pg_stat_statements 
+    End note
+    LogEnrichmentTest->PostgreSqlJson: initLogEnricher <color:gray> 20.7 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->Database: select query from pg_stat_statements where queryid <color:gray> 4.59 ms</color>
+      Note right
+select query from pg_stat_statements where queryid=?
+      End note
+      PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 2.75 ms</color>
+      activate LogEnricherPostgreSql
+      PostgreSqlJson<--LogEnricherPostgreSql: void
+      deactivate LogEnricherPostgreSql
+    LogEnrichmentTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+    LogEnrichmentTest->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.00864 ms</color>
+    activate LogEnricherPostgreSql
+    LogEnrichmentTest<--LogEnricherPostgreSql: string
+    deactivate LogEnricherPostgreSql
+    Loop 5 times <color:gray> 4.37 ms</color>
+      LogEnrichmentTest->LogEnricherPostgreSql: getStatement <color:gray> 4.37 ms</color>
+      activate LogEnricherPostgreSql
+      LogEnrichmentTest<--LogEnricherPostgreSql: void
+      deactivate LogEnricherPostgreSql
+    End
+    LogEnrichmentTest->Database: INSERT INTO pg_stat_statements(queryid,query) VALU <color:gray> 0.558 ms</color>
+    Note right
+INSERT INTO pg_stat_statements(queryid,query) VALUES (1024, 'select
+version()')-- emulate pg_stat_statements 
+    End note
+    LogEnrichmentTest->LogEnricherPostgreSql: getStatement <color:gray> 4.49 ms</color>
+    activate LogEnricherPostgreSql
+    LogEnrichmentTest<--LogEnricherPostgreSql: string
+    deactivate LogEnricherPostgreSql
+    LogEnrichmentTest->Database: INSERT INTO pg_stat_statements(queryid,query) VALU <color:gray> 0.233 ms</color>
+    Note right
+INSERT INTO pg_stat_statements(queryid,query) VALUES (-3416356442043621232,
+'SELECT pg_sleep($1)')-- emulate pg_stat_statements 
+    End note
+    LogEnrichmentTest->PostgreSqlJson: parseLogLine <color:gray> 5.81 ms</color>
+    activate PostgreSqlJson
+      Loop 3 times <color:gray> 0.105 ms</color>
+        PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.105 ms</color>
+        activate LogEnricherPostgreSql
+        PostgreSqlJson<--LogEnricherPostgreSql: string
+        deactivate LogEnricherPostgreSql
+      End
+      PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.169 ms</color>
+      activate LogEnricherPostgreSql
+      PostgreSqlJson<--LogEnricherPostgreSql: string
+      deactivate LogEnricherPostgreSql
+    LogEnrichmentTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+    LogEnrichmentTest->PostgreSqlJson: close <color:gray> 0.0762 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->LogEnricherPostgreSql: close <color:gray> 0.0373 ms</color>
+      activate LogEnricherPostgreSql
+      PostgreSqlJson<--LogEnricherPostgreSql: void
+      deactivate LogEnricherPostgreSql
+    LogEnrichmentTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--LogEnrichmentTest: void
+  deactivate LogEnrichmentTest
+@enduml

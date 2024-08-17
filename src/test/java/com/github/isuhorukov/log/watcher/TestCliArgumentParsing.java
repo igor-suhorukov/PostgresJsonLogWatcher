@@ -12,10 +12,14 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TestCliArgumentParsing {
+
+    /**
+     * @plantUml
+     */
     @StdIo
     @Test
     @SneakyThrows
-    void testDefaultParameters(StdErr out) {
+    public void testDefaultParameters(StdErr out) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             assertEquals(0, postgreSqlJson.saveInterval);
             assertEquals(0, postgreSqlJson.posgreSqlPort);
@@ -37,10 +41,14 @@ public class TestCliArgumentParsing {
             assertEquals("Missing required parameter: '<watchDir>'", out.capturedLines()[0]);
         }
     }
+
+    /**
+     * @plantUml
+     */
     @StdIo
     @Test
     @SneakyThrows
-    void testNonExistingDir(StdOut out) {
+    public void testNonExistingDir(StdOut out) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             //init class with default parameters from picocli annotations
             int failed = new CommandLine(postgreSqlJson).execute(UUID.randomUUID().toString());
@@ -52,10 +60,13 @@ public class TestCliArgumentParsing {
         }
     }
 
+    /**
+     * @plantUml
+     */
     @StdIo
     @Test
     @SneakyThrows
-    void testHelpParameter(StdOut out) {
+    public void testHelpParameter(StdOut out) {
         System.setProperty("skipProcessExit","true");
         PostgreSqlJson.main(new String[]{"--help"});
         assertTrue(out.capturedLines().length > 0);

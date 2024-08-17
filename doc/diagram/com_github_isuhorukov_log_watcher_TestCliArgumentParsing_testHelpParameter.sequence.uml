@@ -1,0 +1,24 @@
+@startuml
+
+participant TestCliArgumentParsing as "TestCliArgumentParsing"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant EnrichmentOff as "EnrichmentOff"
+  [->TestCliArgumentParsing: testHelpParameter <color:gray> 2.7 ms</color>
+  activate TestCliArgumentParsing
+    Loop 2 times <color:gray> 2.65 ms</color>
+      TestCliArgumentParsing->PostgreSqlJson: <u>main</u> <color:gray> 2.65 ms</color>
+      activate PostgreSqlJson
+        PostgreSqlJson->PostgreSqlJson: close <color:gray> 0.167 ms</color>
+        activate PostgreSqlJson
+          PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0479 ms</color>
+          activate EnrichmentOff
+          PostgreSqlJson<--EnrichmentOff: void
+          deactivate EnrichmentOff
+        PostgreSqlJson<--PostgreSqlJson: void
+        deactivate PostgreSqlJson
+      TestCliArgumentParsing<--PostgreSqlJson: void
+      deactivate PostgreSqlJson
+    End
+  [<--TestCliArgumentParsing: void
+  deactivate TestCliArgumentParsing
+@enduml

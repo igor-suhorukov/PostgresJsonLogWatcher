@@ -1,0 +1,30 @@
+@startuml
+
+participant WatchServiceTest as "WatchServiceTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant WatchServiceTest_1 as "WatchServiceTest$1"
+  [->WatchServiceTest: testWatchServiceSkipNonJson <color:gray> 19.6 ms</color>
+  activate WatchServiceTest
+    WatchServiceTest->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.635 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 0.0268 ms</color>
+      activate PostgreSqlJson
+      PostgreSqlJson<--PostgreSqlJson: void
+      deactivate PostgreSqlJson
+      PostgreSqlJson->WatchServiceTest_1: positionFileTasks <color:gray> 0.0185 ms</color>
+      activate WatchServiceTest_1
+      PostgreSqlJson<--WatchServiceTest_1: java.lang.Thread
+      deactivate WatchServiceTest_1
+      PostgreSqlJson->WatchServiceTest_1: initialLogImport <color:gray> 0.0218 ms</color>
+      activate WatchServiceTest_1
+      PostgreSqlJson<--WatchServiceTest_1: void
+      deactivate WatchServiceTest_1
+      PostgreSqlJson->WatchServiceTest_1: registerWatchEvent <color:gray> 0.0136 ms</color>
+      activate WatchServiceTest_1
+      PostgreSqlJson<--WatchServiceTest_1: void
+      deactivate WatchServiceTest_1
+    WatchServiceTest<--PostgreSqlJson: java.lang.Integer
+    deactivate PostgreSqlJson
+  [<--WatchServiceTest: void
+  deactivate WatchServiceTest
+@enduml

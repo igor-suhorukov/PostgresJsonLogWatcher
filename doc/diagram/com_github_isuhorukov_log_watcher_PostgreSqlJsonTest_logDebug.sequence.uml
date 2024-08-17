@@ -1,0 +1,18 @@
+@startuml
+
+participant PostgreSqlJsonTest as "PostgreSqlJsonTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant EnrichmentOff as "EnrichmentOff"
+  [->PostgreSqlJsonTest: logDebug <color:gray> 0.162 ms</color>
+  activate PostgreSqlJsonTest
+    PostgreSqlJsonTest->PostgreSqlJson: parseLogLine <color:gray> 0.126 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0319 ms</color>
+      activate EnrichmentOff
+      PostgreSqlJson<--EnrichmentOff: void
+      deactivate EnrichmentOff
+    PostgreSqlJsonTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--PostgreSqlJsonTest: void
+  deactivate PostgreSqlJsonTest
+@enduml

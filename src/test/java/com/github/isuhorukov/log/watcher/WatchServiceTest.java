@@ -51,9 +51,12 @@ public class WatchServiceTest {
         }
     };
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void testWatchService(@TempDir Path tempDir) {
+    public void testWatchService(@TempDir Path tempDir) {
         Path jsonLog = Files.createFile(tempDir.resolve("postgresql-2024-08-04_072905.json"));
         Files.write(jsonLog, ("{\"timestamp\":\"2024-08-01 06:55:52.123 UTC\",\"pid\":50," +
                 "\"session_id\":\"66ab3178.32\",\"line_num\":4,\"session_start\":\"2024-08-01 06:55:52 UTC\"," +
@@ -78,9 +81,12 @@ public class WatchServiceTest {
                 keyValue("backend_type", "postmaster"), keyValue("fileName", "postgresql-2024-08-04_072905.json")));
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void testWatchServiceSkipNonJson(@TempDir Path tempDir) {
+    public void testWatchServiceSkipNonJson(@TempDir Path tempDir) {
         Path jsonLog = Files.createFile(tempDir.resolve("postgresql-2024-08-04_072905.log"));
         Files.write(jsonLog, "".getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);
         doNothing().when(watchService).close();
@@ -97,8 +103,11 @@ public class WatchServiceTest {
         logCapture.assertNotLogged(LogExpectation.info());
     }
 
+    /**
+     * @plantUml
+     */
     @Test
-    void testRegisterWatchEvent() throws IOException {
+    public void testRegisterWatchEvent() throws IOException {
         try(PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
             WatchService watchService = mock(WatchService.class);
             Path dirToWatch = mock(Path.class);
@@ -107,9 +116,12 @@ public class WatchServiceTest {
         }
     }
 
+    /**
+     * @plantUml
+     */
     @Test
     @SneakyThrows
-    void testWatchService() {
+    public void testWatchService() {
         try(PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
             WatchService watchService = postgreSqlJson.getWatchService();
             assertNotNull(watchService);

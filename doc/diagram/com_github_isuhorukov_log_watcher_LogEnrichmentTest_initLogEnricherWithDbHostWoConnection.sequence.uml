@@ -1,0 +1,26 @@
+@startuml
+
+participant LogEnrichmentTest as "LogEnrichmentTest"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant EnrichmentOff as "EnrichmentOff"
+  [->LogEnrichmentTest: initLogEnricherWithDbHostWoConnection <color:gray> 1.81 ms</color>
+  activate LogEnrichmentTest
+    LogEnrichmentTest->PostgreSqlJson: initLogEnricher <color:gray> 1.69 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->EnrichmentOff: getStatement <color:gray> 0.036 ms</color>
+      activate EnrichmentOff
+      PostgreSqlJson<--EnrichmentOff: void
+      deactivate EnrichmentOff
+    LogEnrichmentTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+    LogEnrichmentTest->PostgreSqlJson: close <color:gray> 0.0549 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0225 ms</color>
+      activate EnrichmentOff
+      PostgreSqlJson<--EnrichmentOff: void
+      deactivate EnrichmentOff
+    LogEnrichmentTest<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--LogEnrichmentTest: void
+  deactivate LogEnrichmentTest
+@enduml
