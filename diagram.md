@@ -1,0 +1,1 @@
+![log enrichment with pg_stat_statements](http://www.plantuml.com/plantuml/proxy?cache=no&src=https://raw.githubusercontent.com/igor-suhorukov/PostgresJsonLogWatcher/master/src/site/diagram/com_github_isuhorukov_log_watcher_LogEnrichmentTest_initLogEnricherWithDbHostWithPgStatStatement.sequence.uml)
