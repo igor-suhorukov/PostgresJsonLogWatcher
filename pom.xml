@@ -27,6 +27,8 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jacoco.version>0.8.12</jacoco.version>
+        <getappmap.version>3.159.0</getappmap.version>
+        <appmap.result>${project.build.directory}/appmap</appmap.result>
     </properties>
 
     <dependencies>
@@ -106,6 +108,123 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>2.7.18</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>com.github.isuhorukov.log.watcher.PostgreSqlJson</mainClass>
+                    <layout>ZIP</layout>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.appland</groupId>
+                <artifactId>appmap-maven-plugin</artifactId>
+                <version>1.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>process-test-classes</phase>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <outputDirectory>${appmap.result}</outputDirectory>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.9.0</version>
+                <executions>
+                    <execution>
+                        <id>download-linux64</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>https://github.com/getappmap/appmap-js/releases/download/%40appland%2Fappmap-v${getappmap.version}/appmap-linux-x64</url>
+                            <overwrite>false</overwrite>
+                            <outputDirectory>${basedir}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+<!--
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.7.1</version>
+                <executions>
+                    <execution>
+                        <id>copy</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <artifactItems>
+                        <artifactItem>
+                            <groupId>com.github.igor-suhorukov</groupId>
+                            <artifactId>mvn-appmap-cli</artifactId>
+                            <version>3.159.0</version>
+                            <type>bin</type>
+                            <classifier>linux64</classifier>
+                            <overWrite>false</overWrite>
+                            <outputDirectory>${basedir}</outputDirectory>
+                            <destFileName>appmap-linux-x64</destFileName>
+                        </artifactItem>
+                    </artifactItems>
+                </configuration>
+            </plugin>
+-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <id>chmod</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>chmod</executable>
+                            <commandlineArgs>+x ${basedir}/appmap-linux-x64</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>to-plantuml</id>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>sh</executable>
+                            <commandlineArgs>-c "${basedir}/appmap-linux-x64 sequence-diagram --expand package:com/github/isuhorukov/log/watcher -f plantuml *.appmap.json"</commandlineArgs>
+                            <workingDirectory>${appmap.result}/junit</workingDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
@@ -126,29 +245,24 @@
                             </resources>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.3.1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.7.18</version>
-                <executions>
                     <execution>
-                        <phase>package</phase>
+                        <phase>pre-site</phase>
                         <goals>
-                            <goal>repackage</goal>
+                            <goal>copy-resources</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}/src/site/diagram</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${appmap.result}/junit</directory>
+                                    <includes>
+                                        <include>**/*.uml</include>
+                                    </includes>
+                                </resource>
+                            </resources>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <mainClass>com.github.isuhorukov.log.watcher.PostgreSqlJson</mainClass>
-                    <layout>ZIP</layout>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

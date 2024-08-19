@@ -34,11 +34,6 @@ jobs:
     - name: Build with Maven
       run: mvn -B versions:set -DgenerateBackupPoms=false -DnewVersion=${{ steps.extract_branch.outputs.branch }} clean package site --file pom.xml
 
-    - name: Publish to GitHub Packages Apache Maven
-      run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-
     - name: Deploy site docs output to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
