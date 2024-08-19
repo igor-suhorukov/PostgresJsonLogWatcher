@@ -1,18 +1,17 @@
 @startuml
-
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
 participant WatchServiceTest as "WatchServiceTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-participant PostgreSqlJson_2 as "PostgreSqlJson$2"
-  [->WatchServiceTest: testRegisterWatchEvent <color:gray> 42.3 ms</color>
+  [->WatchServiceTest: testRegisterWatchEvent <color:gray> 64.8 ms</color>
   activate WatchServiceTest
-    WatchServiceTest->PostgreSqlJson: registerWatchEvent <color:gray> 7.2 ms</color>
+    WatchServiceTest->PostgreSqlJson: registerWatchEvent <color:gray> 12.9 ms</color>
     activate PostgreSqlJson
     WatchServiceTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    WatchServiceTest->PostgreSqlJson: close <color:gray> 0.0916 ms</color>
+    WatchServiceTest->PostgreSqlJson: close <color:gray> 0.102 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0309 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0363 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff
@@ -20,12 +19,4 @@ participant PostgreSqlJson_2 as "PostgreSqlJson$2"
     deactivate PostgreSqlJson
   [<--WatchServiceTest: void
   deactivate WatchServiceTest
-  [->PostgreSqlJson_2: run <color:gray> 0.264 ms</color>
-  activate PostgreSqlJson_2
-    PostgreSqlJson_2->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.126 ms</color>
-    activate PostgreSqlJson
-    PostgreSqlJson_2<--PostgreSqlJson: void
-    deactivate PostgreSqlJson
-  [<--PostgreSqlJson_2: void
-  deactivate PostgreSqlJson_2
 @enduml

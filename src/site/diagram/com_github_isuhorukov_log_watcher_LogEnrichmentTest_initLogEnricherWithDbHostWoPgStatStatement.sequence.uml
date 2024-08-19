@@ -1,19 +1,19 @@
 @startuml
-
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
 participant LogEnrichmentTest as "LogEnrichmentTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant LogEnricherPostgreSql as "LogEnricherPostgreSql"
 participant EnrichmentOff as "EnrichmentOff"
 participant Database as "Database"
-  [->LogEnrichmentTest: initLogEnricherWithDbHostWoPgStatStatement <color:gray> 18.1 ms</color>
+  [->LogEnrichmentTest: initLogEnricherWithDbHostWoPgStatStatement <color:gray> 16 ms</color>
   activate LogEnrichmentTest
-    LogEnrichmentTest->PostgreSqlJson: initLogEnricher <color:gray> 17.2 ms</color>
+    LogEnrichmentTest->PostgreSqlJson: initLogEnricher <color:gray> 15.4 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->Database: select query from pg_stat_statements where queryid <color:gray> 0.0521 ms</color>
+      PostgreSqlJson->Database: select query from pg_stat_statements where queryid <color:gray> 0.0381 ms</color>
       Note right
 select query from pg_stat_statements where queryid=?
       End note
-      PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 7.73 ms</color>
+      PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 6.18 ms</color>
       activate LogEnricherPostgreSql
       PostgreSqlJson<--LogEnricherPostgreSql: <i>exception!</i>
       deactivate LogEnricherPostgreSql
@@ -21,9 +21,9 @@ select query from pg_stat_statements where queryid=?
     deactivate PostgreSqlJson
   [<--LogEnrichmentTest: void
   deactivate LogEnrichmentTest
-  [->PostgreSqlJson: close <color:gray> 0.058 ms</color>
+  [->PostgreSqlJson: close <color:gray> 0.024 ms</color>
   activate PostgreSqlJson
-    PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0215 ms</color>
+    PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0105 ms</color>
     activate EnrichmentOff
     PostgreSqlJson<--EnrichmentOff: void
     deactivate EnrichmentOff

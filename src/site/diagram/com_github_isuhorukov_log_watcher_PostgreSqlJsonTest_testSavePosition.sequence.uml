@@ -1,18 +1,18 @@
 @startuml
-
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
 participant PostgreSqlJsonTest as "PostgreSqlJsonTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->PostgreSqlJsonTest: testSavePosition <color:gray> 10.3 ms</color>
+  [->PostgreSqlJsonTest: testSavePosition <color:gray> 0.996 ms</color>
   activate PostgreSqlJsonTest
-    PostgreSqlJsonTest->PostgreSqlJson: initialLogImport <color:gray> 1.14 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: initialLogImport <color:gray> 0.392 ms</color>
     activate PostgreSqlJson
-      Loop 3 times <color:gray> 1.05 ms</color>
-        PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 1.05 ms</color>
+      Loop 3 times <color:gray> 0.341 ms</color>
+        PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 0.341 ms</color>
         activate PostgreSqlJson
-          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.743 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.226 ms</color>
           activate PostgreSqlJson
-            PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.253 ms</color>
+            PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0525 ms</color>
             activate EnrichmentOff
             PostgreSqlJson<--EnrichmentOff: void
             deactivate EnrichmentOff
@@ -23,13 +23,13 @@ participant EnrichmentOff as "EnrichmentOff"
       End
     PostgreSqlJsonTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    PostgreSqlJsonTest->PostgreSqlJson: saveLogFilesPosition <color:gray> 4.28 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.143 ms</color>
     activate PostgreSqlJson
     PostgreSqlJsonTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    PostgreSqlJsonTest->PostgreSqlJson: close <color:gray> 0.0792 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: close <color:gray> 0.0577 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0328 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0313 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

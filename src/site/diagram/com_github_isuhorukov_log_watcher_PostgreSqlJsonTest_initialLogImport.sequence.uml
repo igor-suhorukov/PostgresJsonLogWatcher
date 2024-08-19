@@ -1,18 +1,18 @@
 @startuml
-
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
 participant PostgreSqlJsonTest as "PostgreSqlJsonTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->PostgreSqlJsonTest: initialLogImport <color:gray> 1.27 ms</color>
+  [->PostgreSqlJsonTest: initialLogImport <color:gray> 0.526 ms</color>
   activate PostgreSqlJsonTest
-    PostgreSqlJsonTest->PostgreSqlJson: initialLogImport <color:gray> 1.04 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: initialLogImport <color:gray> 0.443 ms</color>
     activate PostgreSqlJson
-      Loop 2 times <color:gray> 0.839 ms</color>
-        PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 0.839 ms</color>
+      Loop 2 times <color:gray> 0.334 ms</color>
+        PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 0.334 ms</color>
         activate PostgreSqlJson
-          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.57 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.172 ms</color>
           activate PostgreSqlJson
-            PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0902 ms</color>
+            PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0353 ms</color>
             activate EnrichmentOff
             PostgreSqlJson<--EnrichmentOff: void
             deactivate EnrichmentOff
@@ -23,9 +23,9 @@ participant EnrichmentOff as "EnrichmentOff"
       End
     PostgreSqlJsonTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    PostgreSqlJsonTest->PostgreSqlJson: close <color:gray> 0.0482 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: close <color:gray> 0.0261 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0193 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0116 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

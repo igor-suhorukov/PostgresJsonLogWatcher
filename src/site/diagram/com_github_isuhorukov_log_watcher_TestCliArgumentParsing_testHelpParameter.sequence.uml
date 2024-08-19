@@ -1,16 +1,16 @@
 @startuml
-
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
 participant TestCliArgumentParsing as "TestCliArgumentParsing"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->TestCliArgumentParsing: testHelpParameter <color:gray> 2.7 ms</color>
+  [->TestCliArgumentParsing: testHelpParameter <color:gray> 2.46 ms</color>
   activate TestCliArgumentParsing
-    Loop 2 times <color:gray> 2.65 ms</color>
-      TestCliArgumentParsing->PostgreSqlJson: <u>main</u> <color:gray> 2.65 ms</color>
+    Loop 2 times <color:gray> 2.41 ms</color>
+      TestCliArgumentParsing->PostgreSqlJson: <u>main</u> <color:gray> 2.41 ms</color>
       activate PostgreSqlJson
-        PostgreSqlJson->PostgreSqlJson: close <color:gray> 0.167 ms</color>
+        PostgreSqlJson->PostgreSqlJson: close <color:gray> 0.177 ms</color>
         activate PostgreSqlJson
-          PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0479 ms</color>
+          PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0493 ms</color>
           activate EnrichmentOff
           PostgreSqlJson<--EnrichmentOff: void
           deactivate EnrichmentOff

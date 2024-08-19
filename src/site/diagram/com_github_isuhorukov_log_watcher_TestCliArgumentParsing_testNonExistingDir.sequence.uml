@@ -1,21 +1,21 @@
 @startuml
-
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
 participant TestCliArgumentParsing as "TestCliArgumentParsing"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->TestCliArgumentParsing: testNonExistingDir <color:gray> 2.17 ms</color>
+  [->TestCliArgumentParsing: testNonExistingDir <color:gray> 1.57 ms</color>
   activate TestCliArgumentParsing
-    TestCliArgumentParsing->PostgreSqlJson: call <color:gray> 1.02 ms</color>
+    TestCliArgumentParsing->PostgreSqlJson: call <color:gray> 0.77 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.907 ms</color>
+      PostgreSqlJson->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.689 ms</color>
       activate PostgreSqlJson
       PostgreSqlJson<--PostgreSqlJson: java.lang.Integer
       deactivate PostgreSqlJson
     TestCliArgumentParsing<--PostgreSqlJson: java.lang.Integer
     deactivate PostgreSqlJson
-    TestCliArgumentParsing->PostgreSqlJson: close <color:gray> 0.0914 ms</color>
+    TestCliArgumentParsing->PostgreSqlJson: close <color:gray> 0.0693 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.028 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0212 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff
