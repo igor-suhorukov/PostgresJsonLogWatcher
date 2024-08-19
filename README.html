@@ -53,6 +53,43 @@
           </div>
         </header>
         <main id="bodyColumn" class="span10">
+<p>command line parameters:</p>
+
+<pre><code class="language-bash">java -jar target/postgres_log_parser.jar -h
+</code></pre>
+
+<pre class="prettyprint"><code>This program reads PostgreSQL DBMS logs in JSON format and sends them to
+OpenTelemetry collector
+Usage: postgres_log_parser [-hV] [--password[=&lt;posgreSqlPassword&gt;]]
+                           [-c=&lt;maximumQueryCacheSize&gt;]
+                           [-d=&lt;posgreSqlDatabase&gt;] [-H=&lt;posgreSqlHost&gt;]
+                           [-i=&lt;saveInterval&gt;] [-lp=&lt;currentLogPositionFile&gt;]
+                           [-p=&lt;posgreSqlPort&gt;] [-u=&lt;posgreSqlUserName&gt;]
+                           &lt;watchDir&gt;
+      &lt;watchDir&gt;   Path to PostgreSQL log directory in JSON format
+  -c, --max_cache_size=&lt;maximumQueryCacheSize&gt;
+                   Database query cache size
+  -d, --database=&lt;posgreSqlDatabase&gt;
+                   The database name
+  -h, --help       Show this help message and exit.
+  -H, --host=&lt;posgreSqlHost&gt;
+                   The host name of the PostgreSQL server
+  -i, --save_interval=&lt;saveInterval&gt;
+                   Interval of saving (in second) of the current read position
+                     in the log files. The value must be within a range from 1
+                     till 1000 second
+      -lp, --log_pos_file=&lt;currentLogPositionFile&gt;
+                   Path to file to save current processed position in log
+                     files. Required write capability for this program
+  -p, --port=&lt;posgreSqlPort&gt;
+                   The port number the PostgreSQL server is listening on
+      --password[=&lt;posgreSqlPassword&gt;]
+
+  -u, --user=&lt;posgreSqlUserName&gt;
+                   The database user on whose behalf the connection is being
+                     made
+  -V, --version    Print version information and exit.
+</code></pre>
 <p>Execute program with OTEL java agent:</p>
 
 <pre><code class="language-bash">java -Dotel.resource.attributes=service.name=PostgreSQL_Logs -Dotel.exporter.otlp.protocol=grpc -Dotel.exporter.otlp.endpoint=http://127.0.0.1:4317 -Dotel.logs.exporter=otlp -Dotel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes=true -Dotel.instrumentation.logback-appender.experimental.capture-logger-context-attributes=true -javaagent:opentelemetry-javaagent-2.7.0.jar -jar postgres_log_parser.jar ~/database/log

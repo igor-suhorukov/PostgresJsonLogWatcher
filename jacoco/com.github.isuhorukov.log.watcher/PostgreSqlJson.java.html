@@ -22,9 +22,10 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 @CommandLine.Command(mixinStandardHelpOptions = true, versionProvider = VersionProvider.class,
+        name = &quot;postgres_log_parser&quot;,
         header = &quot;This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector&quot;)
 @Setter
-<span class="fc" id="L27">public class PostgreSqlJson implements Callable&lt;Integer&gt;, Closeable {</span>
+<span class="fc" id="L28">public class PostgreSqlJson implements Callable&lt;Integer&gt;, Closeable {</span>
 
     public static final String DURATION = &quot;duration: &quot;;
     public static final String MS = &quot; ms&quot;;
@@ -32,14 +33,14 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
     public static final String QUERY_ID = &quot;query_id&quot;;
     public static final String JSON_SUFFIX = &quot;.json&quot;;
 
-<span class="fc" id="L35">    private static final Logger logger = LoggerFactory.getLogger(PostgreSqlJson.class);</span>
-<span class="fc" id="L36">    private static final Logger cliLogger = LoggerFactory.getLogger(&quot;cli&quot;);</span>
+<span class="fc" id="L36">    private static final Logger logger = LoggerFactory.getLogger(PostgreSqlJson.class);</span>
+<span class="fc" id="L37">    private static final Logger cliLogger = LoggerFactory.getLogger(&quot;cli&quot;);</span>
 
-<span class="fc" id="L38">    private static final ObjectMapper mapper = new ObjectMapper();</span>
+<span class="fc" id="L39">    private static final ObjectMapper mapper = new ObjectMapper();</span>
 
-<span class="fc" id="L40">    final Map&lt;String, Long&gt; position = new ConcurrentHashMap&lt;&gt;();</span>
+<span class="fc" id="L41">    final Map&lt;String, Long&gt; position = new ConcurrentHashMap&lt;&gt;();</span>
 
-<span class="fc" id="L42">    LogEnricher logEnricher = new EnrichmentOff();</span>
+<span class="fc" id="L43">    LogEnricher logEnricher = new EnrichmentOff();</span>
 
     @CommandLine.Parameters(index = &quot;0&quot;, description = &quot;Path to PostgreSQL log directory in JSON format&quot;)
     String watchDir;
@@ -57,8 +58,8 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
             description = &quot;The database user on whose behalf the connection is being made&quot;)
     String posgreSqlUserName;
 
-<span class="fc" id="L60">    @CommandLine.Option(names = &quot;--password&quot;, arity = &quot;0..1&quot;, interactive = true)</span>
-<span class="fc" id="L61">    String posgreSqlPassword = System.getenv(&quot;PGPASSWORD&quot;);</span>
+<span class="fc" id="L61">    @CommandLine.Option(names = &quot;--password&quot;, arity = &quot;0..1&quot;, interactive = true)</span>
+<span class="fc" id="L62">    String posgreSqlPassword = System.getenv(&quot;PGPASSWORD&quot;);</span>
 
     @CommandLine.Option(names = {&quot;-c&quot;, &quot;--max_cache_size&quot;},  defaultValue = &quot;50000&quot;,
             description = &quot;Database query cache size&quot;)
@@ -68,269 +69,269 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
                     &quot;Required write capability for this program&quot;)
     String currentLogPositionFile;
 
-<span class="pc" id="L71">    @SneakyThrows</span>
+<span class="pc" id="L72">    @SneakyThrows</span>
     public static void main(String[] args) {
-<span class="fc" id="L73">        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){</span>
-<span class="fc" id="L74">            int exitCode = new CommandLine(postgreSqlJson).execute(args);</span>
-<span class="pc bpc" id="L75" title="1 of 2 branches missed.">            if(!Boolean.getBoolean(&quot;skipProcessExit&quot;)){</span>
-<span class="nc" id="L76">                System.exit(exitCode);</span>
+<span class="fc" id="L74">        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){</span>
+<span class="fc" id="L75">            int exitCode = new CommandLine(postgreSqlJson).execute(args);</span>
+<span class="pc bpc" id="L76" title="1 of 2 branches missed.">            if(!Boolean.getBoolean(&quot;skipProcessExit&quot;)){</span>
+<span class="nc" id="L77">                System.exit(exitCode);</span>
             }
         }
-<span class="fc" id="L79">    }</span>
+<span class="fc" id="L80">    }</span>
 
     @Override
     public Integer call() throws Exception {
-<span class="fc" id="L83">        return watchPostgreSqlLogs();</span>
+<span class="fc" id="L84">        return watchPostgreSqlLogs();</span>
     }
 
     public int watchPostgreSqlLogs() throws IOException, InterruptedException {
-<span class="pc bpc" id="L87" title="1 of 4 branches missed.">        if(watchDir==null || watchDir.trim().isEmpty()){</span>
-<span class="fc" id="L88">            cliLogger.error(&quot;Path to PostgreSQL log directory expected&quot;);</span>
-<span class="fc" id="L89">            return 1;</span>
+<span class="pc bpc" id="L88" title="1 of 4 branches missed.">        if(watchDir==null || watchDir.trim().isEmpty()){</span>
+<span class="fc" id="L89">            cliLogger.error(&quot;Path to PostgreSQL log directory expected&quot;);</span>
+<span class="fc" id="L90">            return 1;</span>
         }
-<span class="fc" id="L91">        File sourceDirectory = new File(watchDir);</span>
-<span class="fc bfc" id="L92" title="All 2 branches covered.">        if(!sourceDirectory.exists()) {</span>
-<span class="fc" id="L93">            cliLogger.error(&quot;PostgreSQL directory '{}' with JSON logs not exist&quot;, watchDir);</span>
-<span class="fc" id="L94">            return 1;</span>
+<span class="fc" id="L92">        File sourceDirectory = new File(watchDir);</span>
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if(!sourceDirectory.exists()) {</span>
+<span class="fc" id="L94">            cliLogger.error(&quot;PostgreSQL directory '{}' with JSON logs not exist&quot;, watchDir);</span>
+<span class="fc" id="L95">            return 1;</span>
         }
-<span class="fc bfc" id="L96" title="All 2 branches covered.">        if(!sourceDirectory.isDirectory()){</span>
-<span class="fc" id="L97">            cliLogger.error(&quot;Path '{}' is not directory&quot;, watchDir);</span>
-<span class="fc" id="L98">            return 1;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">        if(!sourceDirectory.isDirectory()){</span>
+<span class="fc" id="L98">            cliLogger.error(&quot;Path '{}' is not directory&quot;, watchDir);</span>
+<span class="fc" id="L99">            return 1;</span>
         }
-<span class="fc bfc" id="L100" title="All 4 branches covered.">        if(saveInterval&lt;=0 || saveInterval&gt;1000){</span>
-<span class="fc" id="L101">            cliLogger.error(&quot;saveInterval must be between 1 and 1000 sec. Actual value {}&quot;, saveInterval);</span>
-<span class="fc" id="L102">            return 1;</span>
+<span class="fc bfc" id="L101" title="All 4 branches covered.">        if(saveInterval&lt;=0 || saveInterval&gt;1000){</span>
+<span class="fc" id="L102">            cliLogger.error(&quot;saveInterval must be between 1 and 1000 sec. Actual value {}&quot;, saveInterval);</span>
+<span class="fc" id="L103">            return 1;</span>
         }
-<span class="fc" id="L104">        initLogEnricher();</span>
-<span class="fc" id="L105">        positionFileTasks();</span>
-<span class="fc" id="L106">        initialLogImport(sourceDirectory);</span>
-<span class="fc" id="L107">        Path dirToWatch = Paths.get(watchDir);</span>
-<span class="fc" id="L108">        try (WatchService watchService = getWatchService()) {</span>
-<span class="fc" id="L109">            registerWatchEvent(dirToWatch, watchService);</span>
+<span class="fc" id="L105">        initLogEnricher();</span>
+<span class="fc" id="L106">        positionFileTasks();</span>
+<span class="fc" id="L107">        initialLogImport(sourceDirectory);</span>
+<span class="fc" id="L108">        Path dirToWatch = Paths.get(watchDir);</span>
+<span class="fc" id="L109">        try (WatchService watchService = getWatchService()) {</span>
+<span class="fc" id="L110">            registerWatchEvent(dirToWatch, watchService);</span>
             WatchKey key;
-<span class="fc bfc" id="L111" title="All 2 branches covered.">            while ((key = watchService.take()) != null) {</span>
-<span class="fc bfc" id="L112" title="All 2 branches covered.">                for (WatchEvent&lt;?&gt; event : key.pollEvents()) {</span>
-<span class="fc" id="L113">                    String fileName = event.context().toString();</span>
-<span class="fc bfc" id="L114" title="All 2 branches covered.">                    if(!fileName.endsWith(JSON_SUFFIX)){</span>
-<span class="fc" id="L115">                        continue;</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">            while ((key = watchService.take()) != null) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">                for (WatchEvent&lt;?&gt; event : key.pollEvents()) {</span>
+<span class="fc" id="L114">                    String fileName = event.context().toString();</span>
+<span class="fc bfc" id="L115" title="All 2 branches covered.">                    if(!fileName.endsWith(JSON_SUFFIX)){</span>
+<span class="fc" id="L116">                        continue;</span>
                     }
-<span class="fc" id="L117">                    readJsonLog(new File(watchDir, fileName));</span>
-<span class="fc" id="L118">                }</span>
-<span class="fc" id="L119">                key.reset();</span>
+<span class="fc" id="L118">                    readJsonLog(new File(watchDir, fileName));</span>
+<span class="fc" id="L119">                }</span>
+<span class="fc" id="L120">                key.reset();</span>
             }
         }
-<span class="fc" id="L122">        return 0;</span>
+<span class="fc" id="L123">        return 0;</span>
     }
 
     void initLogEnricher() {
-<span class="pc bpc" id="L126" title="1 of 4 branches missed.">        if(posgreSqlHost !=null &amp;&amp; !posgreSqlHost.isEmpty()){</span>
+<span class="pc bpc" id="L127" title="1 of 4 branches missed.">        if(posgreSqlHost !=null &amp;&amp; !posgreSqlHost.isEmpty()){</span>
             try {
-<span class="fc" id="L128">                logEnricher = new LogEnricherPostgreSql(posgreSqlHost, posgreSqlPort, posgreSqlDatabase, posgreSqlUserName, posgreSqlPassword, maximumQueryCacheSize);</span>
-<span class="fc" id="L129">            } catch (Exception e) {</span>
-<span class="fc" id="L130">                cliLogger.error(&quot;Failed to use log enricher {} for postgres, so I work in mode without log enrichment&quot;,</span>
-<span class="fc" id="L131">                        LogEnricherPostgreSql.class.getSimpleName(), e);</span>
-<span class="fc" id="L132">                logEnricher = new EnrichmentOff();</span>
-<span class="fc" id="L133">            }</span>
+<span class="fc" id="L129">                logEnricher = new LogEnricherPostgreSql(posgreSqlHost, posgreSqlPort, posgreSqlDatabase, posgreSqlUserName, posgreSqlPassword, maximumQueryCacheSize);</span>
+<span class="fc" id="L130">            } catch (Exception e) {</span>
+<span class="fc" id="L131">                cliLogger.error(&quot;Failed to use log enricher {} for postgres, so I work in mode without log enrichment&quot;,</span>
+<span class="fc" id="L132">                        LogEnricherPostgreSql.class.getSimpleName(), e);</span>
+<span class="fc" id="L133">                logEnricher = new EnrichmentOff();</span>
+<span class="fc" id="L134">            }</span>
             try {
-<span class="fc" id="L135">                logEnricher.getStatement(&quot;0&quot;);</span>
-<span class="fc" id="L136">                cliLogger.info(&quot;{} up and running&quot;, LogEnricherPostgreSql.class.getSimpleName());</span>
-<span class="fc" id="L137">            } catch (Exception e) {</span>
-<span class="fc" id="L138">                cliLogger.error(&quot;Make sure the extension is available in the database: CREATE EXTENSION pg_stat_statements;\n&quot; +</span>
+<span class="fc" id="L136">                logEnricher.getStatement(&quot;0&quot;);</span>
+<span class="fc" id="L137">                cliLogger.info(&quot;{} up and running&quot;, LogEnricherPostgreSql.class.getSimpleName());</span>
+<span class="fc" id="L138">            } catch (Exception e) {</span>
+<span class="fc" id="L139">                cliLogger.error(&quot;Make sure the extension is available in the database: CREATE EXTENSION pg_stat_statements;\n&quot; +</span>
                         &quot;https://www.postgresql.org/docs/current/pgstatstatements.html&quot;, e);
-<span class="fc" id="L140">                logEnricher = new EnrichmentOff();</span>
-<span class="fc" id="L141">            }</span>
+<span class="fc" id="L141">                logEnricher = new EnrichmentOff();</span>
+<span class="fc" id="L142">            }</span>
 
         } else {
-<span class="fc" id="L144">            logEnricher =  new EnrichmentOff();</span>
+<span class="fc" id="L145">            logEnricher =  new EnrichmentOff();</span>
         }
-<span class="fc" id="L146">    }</span>
+<span class="fc" id="L147">    }</span>
 
     protected void registerWatchEvent(Path dirToWatch, WatchService watchService) throws IOException {
-<span class="fc" id="L149">        dirToWatch.register(watchService, ENTRY_CREATE, ENTRY_MODIFY);</span>
-<span class="fc" id="L150">    }</span>
+<span class="fc" id="L150">        dirToWatch.register(watchService, ENTRY_CREATE, ENTRY_MODIFY);</span>
+<span class="fc" id="L151">    }</span>
 
     protected WatchService getWatchService() throws IOException {
-<span class="fc" id="L153">        return FileSystems.getDefault().newWatchService();</span>
+<span class="fc" id="L154">        return FileSystems.getDefault().newWatchService();</span>
     }
 
     protected void initialLogImport(File sourceDirectory) throws IOException {
-<span class="fc" id="L157">        File[] jsonLogs = sourceDirectory.listFiles(pathname -&gt; pathname.getName().endsWith(JSON_SUFFIX));</span>
+<span class="fc" id="L158">        File[] jsonLogs = sourceDirectory.listFiles(pathname -&gt; pathname.getName().endsWith(JSON_SUFFIX));</span>
 
-<span class="pc bpc" id="L159" title="2 of 4 branches missed.">        if(jsonLogs!=null &amp;&amp; jsonLogs.length&gt;0){</span>
-<span class="fc" id="L160">            Arrays.sort(jsonLogs, Comparator.comparing(File::getName));</span>
-<span class="fc bfc" id="L161" title="All 2 branches covered.">            for(File jsonLog: jsonLogs){</span>
-<span class="fc" id="L162">                readJsonLog(jsonLog);</span>
+<span class="pc bpc" id="L160" title="2 of 4 branches missed.">        if(jsonLogs!=null &amp;&amp; jsonLogs.length&gt;0){</span>
+<span class="fc" id="L161">            Arrays.sort(jsonLogs, Comparator.comparing(File::getName));</span>
+<span class="fc bfc" id="L162" title="All 2 branches covered.">            for(File jsonLog: jsonLogs){</span>
+<span class="fc" id="L163">                readJsonLog(jsonLog);</span>
             }
         }
-<span class="fc" id="L165">    }</span>
+<span class="fc" id="L166">    }</span>
 
-<span class="pc" id="L167">    @SneakyThrows</span>
+<span class="pc" id="L168">    @SneakyThrows</span>
     void parseLogLine(String line, String logName){
-<span class="fc" id="L169">        JsonNode jsonNode = mapper.readTree(line);</span>
-<span class="fc" id="L170">        Level severity = getSeverity(jsonNode.at(&quot;/error_severity&quot;).asText());</span>
-<span class="pc bpc" id="L171" title="1 of 6 branches missed.">        switch (severity){</span>
+<span class="fc" id="L170">        JsonNode jsonNode = mapper.readTree(line);</span>
+<span class="fc" id="L171">        Level severity = getSeverity(jsonNode.at(&quot;/error_severity&quot;).asText());</span>
+<span class="pc bpc" id="L172" title="1 of 6 branches missed.">        switch (severity){</span>
             case TRACE:
-<span class="pc bpc" id="L173" title="1 of 2 branches missed.">                if(!logger.isTraceEnabled()) return;</span>
+<span class="pc bpc" id="L174" title="1 of 2 branches missed.">                if(!logger.isTraceEnabled()) return;</span>
                 break;
             case DEBUG:
-<span class="pc bpc" id="L176" title="1 of 2 branches missed.">                if(!logger.isDebugEnabled()) return;</span>
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">                if(!logger.isDebugEnabled()) return;</span>
                 break;
             case INFO:
-<span class="pc bpc" id="L179" title="1 of 2 branches missed.">                if(!logger.isInfoEnabled()) return;</span>
+<span class="pc bpc" id="L180" title="1 of 2 branches missed.">                if(!logger.isInfoEnabled()) return;</span>
                 break;
             case WARN:
-<span class="pc bpc" id="L182" title="1 of 2 branches missed.">                if(!logger.isWarnEnabled()) return;</span>
+<span class="pc bpc" id="L183" title="1 of 2 branches missed.">                if(!logger.isWarnEnabled()) return;</span>
                 break;
             case ERROR:
-<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                if(!logger.isErrorEnabled()) return;</span>
+<span class="pc bpc" id="L186" title="1 of 2 branches missed.">                if(!logger.isErrorEnabled()) return;</span>
                 break;
         }
 
-<span class="fc" id="L189">        Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields = jsonNode.fields();</span>
+<span class="fc" id="L190">        Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields = jsonNode.fields();</span>
 
-<span class="fc" id="L191">        String message = jsonNode.at(&quot;/message&quot;).asText();</span>
-<span class="pc bpc" id="L192" title="1 of 4 branches missed.">        if(logEnricher.enricherApplicationName()!=null &amp;&amp; message.contains(logEnricher.enricherApplicationName())){</span>
-<span class="nc" id="L193">            return;</span>
+<span class="fc" id="L192">        String message = jsonNode.at(&quot;/message&quot;).asText();</span>
+<span class="pc bpc" id="L193" title="1 of 4 branches missed.">        if(logEnricher.enricherApplicationName()!=null &amp;&amp; message.contains(logEnricher.enricherApplicationName())){</span>
+<span class="nc" id="L194">            return;</span>
         }
 
-<span class="fc" id="L196">        LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);</span>
-<span class="fc bfc" id="L197" title="All 2 branches covered.">        if(message.startsWith(DURATION)){</span>
-<span class="fc" id="L198">            int msEndIndex = message.indexOf(MS);</span>
-<span class="fc" id="L199">            double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));</span>
-<span class="fc" id="L200">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;duration&quot;, duration);</span>
-<span class="fc" id="L201">            int planIdx = message.indexOf(PLAN);</span>
-<span class="fc bfc" id="L202" title="All 2 branches covered.">            if(planIdx!=-1){</span>
-<span class="fc" id="L203">                String plan = message.substring(planIdx + PLAN.length());</span>
-<span class="fc" id="L204">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;plan&quot;, plan);</span>
-<span class="fc" id="L205">            } else</span>
-<span class="fc bfc" id="L206" title="All 2 branches covered.">            if(message.indexOf(&quot; parse &quot;,msEndIndex+2)&gt;-1){</span>
-<span class="fc" id="L207">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;parse&quot;, true);</span>
+<span class="fc" id="L197">        LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        if(message.startsWith(DURATION)){</span>
+<span class="fc" id="L199">            int msEndIndex = message.indexOf(MS);</span>
+<span class="fc" id="L200">            double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));</span>
+<span class="fc" id="L201">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;duration&quot;, duration);</span>
+<span class="fc" id="L202">            int planIdx = message.indexOf(PLAN);</span>
+<span class="fc bfc" id="L203" title="All 2 branches covered.">            if(planIdx!=-1){</span>
+<span class="fc" id="L204">                String plan = message.substring(planIdx + PLAN.length());</span>
+<span class="fc" id="L205">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;plan&quot;, plan);</span>
+<span class="fc" id="L206">            } else</span>
+<span class="fc bfc" id="L207" title="All 2 branches covered.">            if(message.indexOf(&quot; parse &quot;,msEndIndex+2)&gt;-1){</span>
+<span class="fc" id="L208">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;parse&quot;, true);</span>
             } else
-<span class="fc bfc" id="L209" title="All 2 branches covered.">            if(message.indexOf(&quot; bind &quot;,msEndIndex+2)&gt;-1){</span>
-<span class="fc" id="L210">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;bind&quot;, true);</span>
+<span class="fc bfc" id="L210" title="All 2 branches covered.">            if(message.indexOf(&quot; bind &quot;,msEndIndex+2)&gt;-1){</span>
+<span class="fc" id="L211">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;bind&quot;, true);</span>
             }
-<span class="fc" id="L212">            loggingEventBuilder = loggingEventBuilder.setMessage(&quot;&quot;);</span>
-<span class="fc" id="L213">        } else {</span>
-<span class="fc" id="L214">            loggingEventBuilder = loggingEventBuilder.setMessage(message);</span>
-<span class="fc bfc" id="L215" title="All 2 branches covered.">            if(message.startsWith(&quot;statement: &quot;)){</span>
-<span class="fc" id="L216">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement&quot;, true);</span>
+<span class="fc" id="L213">            loggingEventBuilder = loggingEventBuilder.setMessage(&quot;&quot;);</span>
+<span class="fc" id="L214">        } else {</span>
+<span class="fc" id="L215">            loggingEventBuilder = loggingEventBuilder.setMessage(message);</span>
+<span class="fc bfc" id="L216" title="All 2 branches covered.">            if(message.startsWith(&quot;statement: &quot;)){</span>
+<span class="fc" id="L217">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement&quot;, true);</span>
             } else
-<span class="fc bfc" id="L218" title="All 2 branches covered.">            if(message.startsWith(&quot;execute&quot;)){</span>
-<span class="fc" id="L219">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;execute&quot;, true);</span>
+<span class="fc bfc" id="L219" title="All 2 branches covered.">            if(message.startsWith(&quot;execute&quot;)){</span>
+<span class="fc" id="L220">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;execute&quot;, true);</span>
             }
         }
-<span class="fc bfc" id="L222" title="All 2 branches covered.">        while (fields.hasNext()) {</span>
-<span class="fc" id="L223">            Map.Entry&lt;String, JsonNode&gt; entry = fields.next();</span>
-<span class="fc" id="L224">            String key = entry.getKey();</span>
-<span class="fc" id="L225">            String value = entry.getValue().asText();</span>
-<span class="fc bfc" id="L226" title="All 2 branches covered.">            if(&quot;message&quot;.equals(key) ||</span>
-<span class="fc bfc" id="L227" title="All 4 branches covered.">                    (QUERY_ID.equals(key) &amp;&amp; &quot;0&quot;.equals(value)) //skip empty query_id</span>
+<span class="fc bfc" id="L223" title="All 2 branches covered.">        while (fields.hasNext()) {</span>
+<span class="fc" id="L224">            Map.Entry&lt;String, JsonNode&gt; entry = fields.next();</span>
+<span class="fc" id="L225">            String key = entry.getKey();</span>
+<span class="fc" id="L226">            String value = entry.getValue().asText();</span>
+<span class="fc bfc" id="L227" title="All 2 branches covered.">            if(&quot;message&quot;.equals(key) ||</span>
+<span class="fc bfc" id="L228" title="All 4 branches covered.">                    (QUERY_ID.equals(key) &amp;&amp; &quot;0&quot;.equals(value)) //skip empty query_id</span>
             ){
-<span class="fc" id="L229">                continue;</span>
+<span class="fc" id="L230">                continue;</span>
             }
-<span class="pc bpc" id="L231" title="1 of 4 branches missed.">            if(&quot;application_name&quot;.equals(key) &amp;&amp; value.equals(logEnricher.enricherApplicationName())){</span>
-<span class="nc" id="L232">                return; //skip enricher log record by clientName</span>
+<span class="pc bpc" id="L232" title="1 of 4 branches missed.">            if(&quot;application_name&quot;.equals(key) &amp;&amp; value.equals(logEnricher.enricherApplicationName())){</span>
+<span class="nc" id="L233">                return; //skip enricher log record by clientName</span>
             }
-<span class="fc bfc" id="L234" title="All 2 branches covered.">            if(QUERY_ID.equals(key)){</span>
-<span class="fc" id="L235">                String queryId = value;</span>
-<span class="fc" id="L236">                String statement = logEnricher.getStatement(queryId);</span>
-<span class="pc bpc" id="L237" title="1 of 4 branches missed.">                if(statement!=null &amp;&amp; !statement.isEmpty()){</span>
-<span class="fc" id="L238">                    loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement_text&quot;, statement);</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">            if(QUERY_ID.equals(key)){</span>
+<span class="fc" id="L236">                String queryId = value;</span>
+<span class="fc" id="L237">                String statement = logEnricher.getStatement(queryId);</span>
+<span class="pc bpc" id="L238" title="1 of 4 branches missed.">                if(statement!=null &amp;&amp; !statement.isEmpty()){</span>
+<span class="fc" id="L239">                    loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement_text&quot;, statement);</span>
                 }
             }
-<span class="fc" id="L241">            JsonNode entryValue = entry.getValue();</span>
-<span class="fc" id="L242">            loggingEventBuilder = loggingEventBuilder.addKeyValue(key, getValue(entryValue));</span>
-<span class="fc" id="L243">        }</span>
-<span class="fc" id="L244">        loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;fileName&quot;, logName);</span>
-<span class="fc" id="L245">        loggingEventBuilder.log();</span>
-<span class="fc" id="L246">    }</span>
+<span class="fc" id="L242">            JsonNode entryValue = entry.getValue();</span>
+<span class="fc" id="L243">            loggingEventBuilder = loggingEventBuilder.addKeyValue(key, getValue(entryValue));</span>
+<span class="fc" id="L244">        }</span>
+<span class="fc" id="L245">        loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;fileName&quot;, logName);</span>
+<span class="fc" id="L246">        loggingEventBuilder.log();</span>
+<span class="fc" id="L247">    }</span>
 
     private static Object getValue(JsonNode entryValue) {
-<span class="fc bfc" id="L249" title="All 2 branches covered.">        switch (entryValue.getNodeType()){</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        switch (entryValue.getNodeType()){</span>
             case NUMBER:
-<span class="pc bpc" id="L251" title="1 of 3 branches missed.">                switch (entryValue.numberType()){</span>
+<span class="pc bpc" id="L252" title="1 of 3 branches missed.">                switch (entryValue.numberType()){</span>
                     case INT:
-<span class="fc" id="L253">                        return entryValue.asInt();</span>
+<span class="fc" id="L254">                        return entryValue.asInt();</span>
                     case LONG:
-<span class="fc" id="L255">                        return entryValue.asLong();</span>
+<span class="fc" id="L256">                        return entryValue.asLong();</span>
                 }
             case STRING:
             default:
-<span class="fc" id="L259">                return entryValue.asText();</span>
+<span class="fc" id="L260">                return entryValue.asText();</span>
         }
     }
 
     private static Level getSeverity(String severity) {
         //https://www.postgresql.org/docs/current/runtime-config-logging.html#RUNTIME-CONFIG-SEVERITY-LEVELS
-<span class="fc bfc" id="L265" title="All 5 branches covered.">        switch (severity){</span>
+<span class="fc bfc" id="L266" title="All 5 branches covered.">        switch (severity){</span>
             case &quot;DEBUG&quot;:
             case &quot;DEBUG5&quot;:
             case &quot;DEBUG4&quot;:
             case &quot;DEBUG3&quot;:
             case &quot;DEBUG2&quot;:
-<span class="fc" id="L271">            case &quot;DEBUG1&quot;: return Level.DEBUG;</span>
+<span class="fc" id="L272">            case &quot;DEBUG1&quot;: return Level.DEBUG;</span>
             case &quot;LOG&quot;:
             case &quot;INFO&quot;:
-<span class="fc" id="L274">            case &quot;NOTICE&quot;: return Level.INFO;</span>
-<span class="fc" id="L275">            case &quot;WARNING&quot;: return Level.WARN;</span>
+<span class="fc" id="L275">            case &quot;NOTICE&quot;: return Level.INFO;</span>
+<span class="fc" id="L276">            case &quot;WARNING&quot;: return Level.WARN;</span>
             case &quot;ERROR&quot;:
             case &quot;FATAL&quot;:
-<span class="fc" id="L278">            case &quot;PANIC&quot;: return Level.ERROR;</span>
+<span class="fc" id="L279">            case &quot;PANIC&quot;: return Level.ERROR;</span>
             default:
-<span class="fc" id="L280">                return Level.TRACE;</span>
+<span class="fc" id="L281">                return Level.TRACE;</span>
         }
     }
     protected Thread positionFileTasks() throws IOException {
-<span class="pc bpc" id="L284" title="1 of 2 branches missed.">        if(new File(currentLogPositionFile).exists()) {</span>
-<span class="fc" id="L285">            position.putAll(mapper.readValue(new File(currentLogPositionFile),</span>
-<span class="fc" id="L286">                    new TypeReference&lt;ConcurrentHashMap&lt;String, Long&gt;&gt;() {}));</span>
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">        if(new File(currentLogPositionFile).exists()) {</span>
+<span class="fc" id="L286">            position.putAll(mapper.readValue(new File(currentLogPositionFile),</span>
+<span class="fc" id="L287">                    new TypeReference&lt;ConcurrentHashMap&lt;String, Long&gt;&gt;() {}));</span>
         }
-<span class="fc" id="L288">        new Timer(&quot;LogPositionSaver&quot;, true).schedule(new TimerTask() {</span>
+<span class="fc" id="L289">        new Timer(&quot;LogPositionSaver&quot;, true).schedule(new TimerTask() {</span>
             @Override
             public void run() {
-<span class="fc" id="L291">                saveLogFilesPosition();</span>
-<span class="fc" id="L292">            }</span>
-<span class="fc" id="L293">        }, TimeUnit.SECONDS.toMillis(saveInterval), TimeUnit.SECONDS.toMillis(saveInterval));</span>
-<span class="fc" id="L294">        Thread savePostitionShutdownHook = new Thread(this::saveLogFilesPosition);</span>
-<span class="fc" id="L295">        Runtime.getRuntime().addShutdownHook(savePostitionShutdownHook);</span>
-<span class="fc" id="L296">        return savePostitionShutdownHook;</span>
+<span class="fc" id="L292">                saveLogFilesPosition();</span>
+<span class="fc" id="L293">            }</span>
+<span class="fc" id="L294">        }, TimeUnit.SECONDS.toMillis(saveInterval), TimeUnit.SECONDS.toMillis(saveInterval));</span>
+<span class="fc" id="L295">        Thread savePostitionShutdownHook = new Thread(this::saveLogFilesPosition);</span>
+<span class="fc" id="L296">        Runtime.getRuntime().addShutdownHook(savePostitionShutdownHook);</span>
+<span class="fc" id="L297">        return savePostitionShutdownHook;</span>
     }
 
     protected synchronized void saveLogFilesPosition() {
         try {
-<span class="pc bpc" id="L301" title="1 of 2 branches missed.">            if(position.isEmpty()){</span>
-<span class="nc" id="L302">                return;</span>
+<span class="pc bpc" id="L302" title="1 of 2 branches missed.">            if(position.isEmpty()){</span>
+<span class="nc" id="L303">                return;</span>
             }
-<span class="fc" id="L304">            try (FileOutputStream currentPostitionFile = new FileOutputStream(currentLogPositionFile)){</span>
-<span class="fc" id="L305">                mapper.writeValue(currentPostitionFile,new TreeMap&lt;&gt;(position));</span>
+<span class="fc" id="L305">            try (FileOutputStream currentPostitionFile = new FileOutputStream(currentLogPositionFile)){</span>
+<span class="fc" id="L306">                mapper.writeValue(currentPostitionFile,new TreeMap&lt;&gt;(position));</span>
             }
-<span class="fc" id="L307">        } catch (Exception e) {</span>
-<span class="fc" id="L308">            cliLogger.error(&quot;Unable to save current log position&quot;, e);</span>
-<span class="fc" id="L309">        }</span>
-<span class="fc" id="L310">    }</span>
+<span class="fc" id="L308">        } catch (Exception e) {</span>
+<span class="fc" id="L309">            cliLogger.error(&quot;Unable to save current log position&quot;, e);</span>
+<span class="fc" id="L310">        }</span>
+<span class="fc" id="L311">    }</span>
 
     void readJsonLog(File jsonLog) throws IOException {
-<span class="fc" id="L313">        String jsonLogName = jsonLog.getName();</span>
-<span class="fc" id="L314">        long from = position.computeIfAbsent(jsonLogName, name -&gt; 0L);</span>
-<span class="pc bpc" id="L315" title="1 of 2 branches missed.">        if(jsonLog.length() ==0){</span>
-<span class="nc" id="L316">            return;</span>
+<span class="fc" id="L314">        String jsonLogName = jsonLog.getName();</span>
+<span class="fc" id="L315">        long from = position.computeIfAbsent(jsonLogName, name -&gt; 0L);</span>
+<span class="pc bpc" id="L316" title="1 of 2 branches missed.">        if(jsonLog.length() ==0){</span>
+<span class="nc" id="L317">            return;</span>
         }
-<span class="pc bpc" id="L318" title="2 of 4 branches missed.">        if(jsonLog.length()==0 || jsonLog.length()&lt;=position.computeIfAbsent(jsonLogName, name -&gt; 0L)){</span>
-<span class="nc" id="L319">            return;</span>
+<span class="pc bpc" id="L319" title="2 of 4 branches missed.">        if(jsonLog.length()==0 || jsonLog.length()&lt;=position.computeIfAbsent(jsonLogName, name -&gt; 0L)){</span>
+<span class="nc" id="L320">            return;</span>
         }
-<span class="fc" id="L321">        try (RandomAccessFile randomAccessJson = new RandomAccessFile(jsonLog, &quot;r&quot;)) {</span>
-<span class="fc" id="L322">            randomAccessJson.seek(from);</span>
+<span class="fc" id="L322">        try (RandomAccessFile randomAccessJson = new RandomAccessFile(jsonLog, &quot;r&quot;)) {</span>
+<span class="fc" id="L323">            randomAccessJson.seek(from);</span>
             String line;
-<span class="fc bfc" id="L324" title="All 2 branches covered.">            while ((line = randomAccessJson.readLine())!= null) {</span>
-<span class="fc" id="L325">                parseLogLine(line, jsonLogName);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">            while ((line = randomAccessJson.readLine())!= null) {</span>
+<span class="fc" id="L326">                parseLogLine(line, jsonLogName);</span>
             }
         }
-<span class="fc" id="L328">        position.put(jsonLogName, jsonLog.length());</span>
-<span class="fc" id="L329">    }</span>
+<span class="fc" id="L329">        position.put(jsonLogName, jsonLog.length());</span>
+<span class="fc" id="L330">    }</span>
 
     @Override
     public void close() throws IOException {
-<span class="fc" id="L333">        logEnricher.close();</span>
-<span class="fc" id="L334">    }</span>
+<span class="fc" id="L334">        logEnricher.close();</span>
+<span class="fc" id="L335">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
