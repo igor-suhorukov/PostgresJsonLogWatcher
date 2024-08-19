@@ -18,8 +18,8 @@
 
     <scm>
         <url>https://github.com/igor-suhorukov/PostgresJsonLogWatcher</url>
-        <connection>scm:git:git@github.com:igor-suhorukov/PostgresJsonLogWatcher.git</connection>
-        <developerConnection>scm:git:git@github.com:igor-suhorukov/PostgresJsonLogWatcher.git</developerConnection>
+        <connection>scm:git:https://github.com/igor-suhorukov/PostgresJsonLogWatcher.git</connection>
+        <developerConnection>scm:git:https://github.com/igor-suhorukov/PostgresJsonLogWatcher.git</developerConnection>
     </scm>
 
     <properties>
@@ -208,7 +208,6 @@
                 <version>3.3.0</version>
                 <configuration>
                     <content>${project.reporting.outputDirectory}</content>
-                    <pubScmUrl>${project.scm.developerConnection}</pubScmUrl>
                     <scmBranch>gh-pages</scmBranch>
                 </configuration>
                 <executions>
@@ -248,7 +247,7 @@
     <distributionManagement>
         <site>
             <id>github</id>
-            <url>scm:git:git@github.com:igor-suhorukov/PostgresJsonLogWatcher.git</url>
+            <url>${scm.developerConnection}</url>
         </site>
     </distributionManagement>
     <repositories>
