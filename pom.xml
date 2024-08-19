@@ -245,6 +245,12 @@
             </plugin>
         </plugins>
     </reporting>
+    <distributionManagement>
+        <site>
+            <id>github</id>
+            <url>scm:git:git@github.com:igor-suhorukov/PostgresJsonLogWatcher.git</url>
+        </site>
+    </distributionManagement>
     <repositories>
         <repository>
             <id>jitpack.io</id>
