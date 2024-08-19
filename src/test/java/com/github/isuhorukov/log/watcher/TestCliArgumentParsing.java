@@ -72,11 +72,12 @@ public class TestCliArgumentParsing {
         assertTrue(out.capturedLines().length > 0);
         assertEquals("This program reads PostgreSQL DBMS logs in JSON format and sends them to\n" +
                     "OpenTelemetry collector\n" +
-                    "Usage: <main class> [-hV] [--password[=<posgreSqlPassword>]]\n" +
-                    "                    [-c=<maximumQueryCacheSize>] [-d=<posgreSqlDatabase>]\n" +
-                    "                    [-H=<posgreSqlHost>] [-i=<saveInterval>]\n" +
-                    "                    [-lp=<currentLogPositionFile>] [-p=<posgreSqlPort>]\n" +
-                    "                    [-u=<posgreSqlUserName>] <watchDir>\n" +
+                    "Usage: postgres_log_parser [-hV] [--password[=<posgreSqlPassword>]]\n" +
+                    "                           [-c=<maximumQueryCacheSize>]\n" +
+                    "                           [-d=<posgreSqlDatabase>] [-H=<posgreSqlHost>]\n" +
+                    "                           [-i=<saveInterval>] [-lp=<currentLogPositionFile>]\n" +
+                    "                           [-p=<posgreSqlPort>] [-u=<posgreSqlUserName>]\n" +
+                    "                           <watchDir>\n" +
                     "      <watchDir>   Path to PostgreSQL log directory in JSON format\n" +
                     "  -c, --max_cache_size=<maximumQueryCacheSize>\n" +
                     "                   Database query cache size\n" +

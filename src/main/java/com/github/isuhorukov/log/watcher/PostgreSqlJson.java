@@ -22,6 +22,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
 @CommandLine.Command(mixinStandardHelpOptions = true, versionProvider = VersionProvider.class,
+        name = "postgres_log_parser",
         header = "This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector")
 @Setter
 public class PostgreSqlJson implements Callable<Integer>, Closeable {
