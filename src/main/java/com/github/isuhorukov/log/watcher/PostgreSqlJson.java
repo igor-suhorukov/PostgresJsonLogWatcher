@@ -197,26 +197,26 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         if(message.startsWith(DURATION)){
             int msEndIndex = message.indexOf(MS);
             double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));
-            loggingEventBuilder.addKeyValue("duration", duration);
+            loggingEventBuilder = loggingEventBuilder.addKeyValue("duration", duration);
             int planIdx = message.indexOf(PLAN);
             if(planIdx!=-1){
                 String plan = message.substring(planIdx + PLAN.length());
-                loggingEventBuilder.addKeyValue("plan", plan);
+                loggingEventBuilder = loggingEventBuilder.addKeyValue("plan", plan);
             } else
             if(message.indexOf(" parse ",msEndIndex+2)>-1){
-                loggingEventBuilder.addKeyValue("parse", true);
+                loggingEventBuilder = loggingEventBuilder.addKeyValue("parse", true);
             } else
             if(message.indexOf(" bind ",msEndIndex+2)>-1){
-                loggingEventBuilder.addKeyValue("bind", true);
+                loggingEventBuilder = loggingEventBuilder.addKeyValue("bind", true);
             }
-            loggingEventBuilder.setMessage("");
+            loggingEventBuilder = loggingEventBuilder.setMessage("");
         } else {
-            loggingEventBuilder.setMessage(message);
+            loggingEventBuilder = loggingEventBuilder.setMessage(message);
             if(message.startsWith("statement: ")){
-                loggingEventBuilder.addKeyValue("statement", true);
+                loggingEventBuilder = loggingEventBuilder.addKeyValue("statement", true);
             } else
             if(message.startsWith("execute")){
-                loggingEventBuilder.addKeyValue("execute", true);
+                loggingEventBuilder = loggingEventBuilder.addKeyValue("execute", true);
             }
         }
         while (fields.hasNext()) {
@@ -235,13 +235,13 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                 String queryId = value;
                 String statement = logEnricher.getStatement(queryId);
                 if(statement!=null && !statement.isEmpty()){
-                    loggingEventBuilder.addKeyValue("statement_text", statement);
+                    loggingEventBuilder = loggingEventBuilder.addKeyValue("statement_text", statement);
                 }
             }
             JsonNode entryValue = entry.getValue();
-            loggingEventBuilder.addKeyValue(key, getValue(entryValue));
+            loggingEventBuilder = loggingEventBuilder.addKeyValue(key, getValue(entryValue));
         }
-        loggingEventBuilder.addKeyValue("fileName", logName);
+        loggingEventBuilder = loggingEventBuilder.addKeyValue("fileName", logName);
         loggingEventBuilder.log();
     }
 

@@ -339,13 +339,14 @@
                     </tagletArtifact>
                 </configuration>
             </plugin>
+            <plugin>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>4.8.6.2</version>
+            </plugin>
         </plugins>
     </reporting>
     <distributionManagement>
-        <site>
-            <id>github_pages</id>
-            <url>${scm.developerConnection}</url>
-        </site>
         <repository>
             <id>github</id>
             <name>GitHub Packages</name>
