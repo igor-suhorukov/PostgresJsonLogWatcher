@@ -1,3 +1,7 @@
+.idea
+/target/*
 /.current_logger_position
 /src/site/markdown/README.md
 /src/site/markdown/diagram.md
+/appmap.yml
+/appmap-linux-x64
