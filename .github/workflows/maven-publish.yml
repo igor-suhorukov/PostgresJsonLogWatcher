@@ -31,7 +31,7 @@ jobs:
     - name: Deploy site docs output to GitHub Pages
       uses: JamesIves/github-pages-deploy-action@3.7.1
       with:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ github.token }}
         BRANCH: gh-pages # The branch the action should deploy to.
         FOLDER: target/site  # The folder the action should deploy.
         CLEAN: true # Automatically remove deleted files from the deploy branch
