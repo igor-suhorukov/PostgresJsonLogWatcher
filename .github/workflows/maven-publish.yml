@@ -26,8 +26,13 @@ jobs:
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 
+    - name: Extract branch name
+      shell: bash
+      run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+      id: extract_branch
+
     - name: Build with Maven
-      run: mvn -B versions:set -DgenerateBackupPoms=false -DnewVersion=$(git rev-parse --abbrev-ref HEAD) clean package site --file pom.xml
+      run: mvn -B versions:set -DgenerateBackupPoms=false -DnewVersion=${{ steps.extract_branch.outputs.branch }} clean package site --file pom.xml
 
     - name: Publish to GitHub Packages Apache Maven
       run: mvn deploy -s $GITHUB_WORKSPACE/settings.xml
