@@ -207,9 +207,19 @@
                 <artifactId>maven-scm-publish-plugin</artifactId>
                 <version>3.3.0</version>
                 <configuration>
+                    <content>${project.reporting.outputDirectory}</content>
                     <pubScmUrl>${project.scm.developerConnection}</pubScmUrl>
                     <scmBranch>gh-pages</scmBranch>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>scm-publish</id>
+                        <phase>site-deploy</phase>
+                        <goals>
+                            <goal>publish-scm</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
