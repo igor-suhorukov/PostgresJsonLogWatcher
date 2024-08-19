@@ -99,6 +99,7 @@
         </dependency>
     </dependencies>
     <build>
+        <finalName>postgres_log_parser</finalName>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
