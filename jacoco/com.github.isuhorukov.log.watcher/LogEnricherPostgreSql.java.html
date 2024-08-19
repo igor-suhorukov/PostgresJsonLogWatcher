@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang=""><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LogEnricherPostgreSql.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">PostgresLogParser</a> &gt; <a href="index.source.html" class="el_package">com.github.isuhorukov.log.watcher</a> &gt; <span class="el_source">LogEnricherPostgreSql.java</span></div><h1>LogEnricherPostgreSql.java</h1><pre class="source lang-java linenums">package com.github.isuhorukov.log.watcher;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.SneakyThrows;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+public class LogEnricherPostgreSql implements LogEnricher {
+    public static final String LOG_WATCHER_ENRICHER = &quot;log_watcher_enricher&quot;;
+    private final Connection connection;
+    private final PreparedStatement preparedStatement;
+    private final Cache&lt;Long, String&gt; cache;
+<span class="fc" id="L18">    @SneakyThrows</span>
+<span class="fc" id="L19">    public LogEnricherPostgreSql(String host, int port, String database, String user, String password, int maximumSize) {</span>
+<span class="fc" id="L20">        cache = Caffeine.newBuilder().maximumSize(maximumSize).build();</span>
+<span class="fc" id="L21">        connection = DriverManager.getConnection(&quot;jdbc:postgresql://&quot;+ host +&quot;:&quot;+ port +&quot;/&quot; + database +</span>
+<span class="pc bpc" id="L22" title="1 of 4 branches missed.">                (database!=null &amp;&amp; database.contains(&quot;?&quot;)?&quot;&amp;&quot;:&quot;?&quot;) + &quot;ApplicationName=&quot; + LOG_WATCHER_ENRICHER,</span>
+                user, password);
+<span class="fc" id="L24">        preparedStatement = connection.prepareStatement(&quot;select query from pg_stat_statements where queryid=?&quot;);</span>
+<span class="fc" id="L25">    }</span>
+
+    @Override
+<span class="fc" id="L28">    @SneakyThrows</span>
+    public String getStatement(String queryId) {
+
+<span class="fc bfc" id="L31" title="All 4 branches covered.">        if(queryId==null || queryId.isEmpty()){</span>
+<span class="fc" id="L32">            return null;</span>
+        }
+        try {
+<span class="fc" id="L35">            long queryIdLong = Long.parseLong(queryId);</span>
+<span class="fc" id="L36">            return cache.get(queryIdLong, this::internalGetStatement);</span>
+<span class="fc" id="L37">        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L38">            return null;</span>
+        }
+    }
+
+<span class="fc" id="L42">    @SneakyThrows</span>
+    private String internalGetStatement(Long queryId) {
+<span class="fc" id="L44">        preparedStatement.setLong(1, queryId);</span>
+<span class="fc" id="L45">        try (ResultSet resultSet = preparedStatement.executeQuery()){</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            if(resultSet.next()){</span>
+<span class="fc" id="L47">                return resultSet.getString(1);</span>
+            } else {
+<span class="fc" id="L49">                return null;</span>
+            }
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        }</span>
+    }
+
+    @Override
+    public String enricherApplicationName() {
+<span class="fc" id="L56">        return LOG_WATCHER_ENRICHER;</span>
+    }
+
+    @Override
+<span class="pc" id="L60">    @SneakyThrows</span>
+    public void close() throws IOException {
+<span class="fc" id="L62">        connection.close();</span>
+<span class="fc" id="L63">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
