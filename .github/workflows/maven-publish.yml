@@ -28,9 +28,6 @@ jobs:
 
     - name: Setup Graphviz
       uses: ts-graphviz/setup-graphviz@v2
-      with:
-        # graphviz version on Ubuntu.
-        ubuntu-graphviz-version: '2.42.2-3build2'
 
     - name: Extract branch name
       shell: bash
