@@ -21,6 +21,11 @@ import java.util.concurrent.TimeUnit;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_CREATE;
 import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 
+/**
+ * The {@code PostgreSqlJson} class is a command-line tool for reading
+ * PostgreSQL DBMS logs in JSON format and sending them to an OpenTelemetry collector.
+ * It can optionally use a {@link LogEnricher} to add additional data to the logs.
+ */
 @CommandLine.Command(mixinStandardHelpOptions = true, versionProvider = VersionProvider.class,
         name = "postgres_log_parser",
         header = "This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector")
@@ -84,6 +89,22 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         return watchPostgreSqlLogs();
     }
 
+    /**
+     * Monitors the PostgreSQL log directory for changes and processes the logs.
+     * <p>
+     * This method sets up a WatchService to continuously monitor the specified
+     * directory for new or modified log files in JSON format. When such a file
+     * is detected, it is processed to extract relevant log information.
+     * </p>
+     *
+     * <p>
+     * The method also makes use of a log enricher (if configured) to enhance the log data
+     * with additional information.
+     * </p>
+     *
+     * @throws IOException if an I/O error occurs initializing the watcher or processing the logs.
+     * @throws InterruptedException if the watch service is interrupted while waiting for events.
+     */
     public int watchPostgreSqlLogs() throws IOException, InterruptedException {
         if(watchDir==null || watchDir.trim().isEmpty()){
             cliLogger.error("Path to PostgreSQL log directory expected");
@@ -123,6 +144,17 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         return 0;
     }
 
+    /**
+     * Initializes the log enricher for PostgreSQL logs.
+     * <p>
+     * This method creates an instance of {@link LogEnricherPostgreSql} with the specified
+     * PostgreSQL host, port, database, username, password, and query cache size.
+     * </p>
+     * <p>
+     * If the PostgreSQL host is not set or is empty, the method does not initialize the
+     * log enricher, logs an error and instantiate EnrichmentOff instead of LogEnricherPostgreSql.
+     * </p>
+     */
     void initLogEnricher() {
         if(posgreSqlHost !=null && !posgreSqlHost.isEmpty()){
             try {
@@ -154,6 +186,16 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         return FileSystems.getDefault().newWatchService();
     }
 
+    /**
+     * Performs the initial import of PostgreSQL JSON log files from the specified directory.
+     * <p>
+     * This method reads all JSON log files in the given directory, sorts them by name,
+     * and processes each file by calling the {@link #readJsonLog(File)} method.
+     * </p>
+     *
+     * @param sourceDirectory the directory containing the PostgreSQL JSON log files to be imported.
+     * @throws IOException if an I/O error occurs while reading the log files.
+     */
     protected void initialLogImport(File sourceDirectory) throws IOException {
         File[] jsonLogs = sourceDirectory.listFiles(pathname -> pathname.getName().endsWith(JSON_SUFFIX));
 
@@ -165,7 +207,23 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         }
     }
 
-    @SneakyThrows
+    /**
+     * Parses a single line of PostgreSQL JSON log and logs it according to its severity level.
+     * <p>
+     * This method reads a log line in JSON format, determines the severity level of the log message,
+     * and logs the message using the appropriate logging level. If the corresponding logging level
+     * (TRACE, DEBUG, INFO, WARN, ERROR) is not enabled, the method will return immediately without
+     * further processing the log line.
+     * </p>
+     * <p>
+     * The method uses the {@code error_severity} field from the JSON log to determine the logging level
+     * and creates a logging event with additional key-value pairs extracted from the JSON log.
+     * It also handles various log message formats, adjusting or adding specific log attributes such as
+     * duration, plan, parse, and bind if they are present in the message.
+     * </p>
+     * @param line the log line in JSON format to be parsed.
+     * @param logName the name of the log file from which the line was read.
+     */    @SneakyThrows
     void parseLogLine(String line, String logName){
         JsonNode jsonNode = mapper.readTree(line);
         Level severity = getSeverity(jsonNode.at("/error_severity").asText());
@@ -281,6 +339,31 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                 return Level.TRACE;
         }
     }
+
+    /**
+     * Manages the tasks related to handling positional information for PostgreSQL log files.
+     * <p>
+     * This method processes and updates the positional information of log files to ensure that
+     * logs are correctly read and parsed from the last known position. It handles the initialization,
+     * periodic updates, and finalization of positions for different log files. The method ensures
+     * that log parsing can resume correctly after restarts or interruptions by accurately maintaining
+     * and updating the position information.
+     * </p>
+     * <p>
+     * The method typically involves the following tasks:
+     * </p>
+     * <ul>
+     *   <li>Initializing the position map for new log files.</li>
+     *   <li>Updating the position as logs are read and processed.</li>
+     *   <li>Saving the current position to persistent storage.</li>
+     * </ul>
+     * <p>
+     * This method is crucial for log processing scenarios where it's important to not miss any log
+     * entries and to avoid reprocessing already handled logs.
+     * </p>
+     *
+     * @throws IOException if an I/O error occurs while managing the log file positions.
+     */
     protected Thread positionFileTasks() throws IOException {
         if(new File(currentLogPositionFile).exists()) {
             position.putAll(mapper.readValue(new File(currentLogPositionFile),
@@ -297,6 +380,14 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         return savePostitionShutdownHook;
     }
 
+    /**
+     * Saves the current read positions of PostgreSQL log files.
+     * <p>
+     * This method writes the current positions of log files to a specified file, ensuring accurate
+     * resume points after restarts or interruptions. It ensures atomicity and consistency to prevent
+     * data loss.
+     * </p>
+     */
     protected synchronized void saveLogFilesPosition() {
         try {
             if(position.isEmpty()){
@@ -310,6 +401,15 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         }
     }
 
+    /**
+     * Reads a JSON log file and processes each line.
+     * This method reads through the specified JSON log file starting from the last saved position,
+     * parses each line, and processes it according to the log's severity level. It updates the
+     * read position after processing each log entry to ensure accurate resumption.
+     *
+     * @param jsonLog the JSON log file to read
+     * @throws IOException if an error occurs while reading the log file
+     */
     void readJsonLog(File jsonLog) throws IOException {
         String jsonLogName = jsonLog.getName();
         long from = position.computeIfAbsent(jsonLogName, name -> 0L);

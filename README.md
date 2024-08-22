@@ -1,4 +1,55 @@
-command line parameters:
+# PostgresJsonLogWatcher
+
+The **PostgresJsonLogWatcher** project provides a tool for monitoring PostgreSQL logs in JSON format and sending the logs to an OpenTelemetry collector. This tool can also enrich logs with additional information fetched from the PostgreSQL database.
+
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+
+## Features
+
+- Monitors PostgreSQL logs in JSON format.
+- Enriches logs with additional information from the PostgreSQL database.
+- Sends enriched logs to an OpenTelemetry collector.
+- Configurable via command line arguments.
+
+## Installation
+
+### Prerequisites
+
+- Java 11 or later
+- PostgreSQL database with `pg_stat_statements` extension enabled
+- OpenTelemetry collector
+
+### Downloading the Release
+
+You can download the latest release from the [GitHub Releases](https://github.com/igor-suhorukov/PostgresJsonLogWatcher/releases) page.
+
+1. Navigate to the [Releases](https://github.com/igor-suhorukov/PostgresJsonLogWatcher/releases) page.
+2. Click on the latest release.
+3. Download the relevant binary or source code archive for your system.
+
+### Reading GitHub Pages Documentation
+
+Detailed documentation for the project is available on GitHub Pages.
+
+- Navigate to the [Project Documentation](https://igor-suhorukov.github.io/PostgresJsonLogWatcher/) page on GitHub Pages.
+
+
+### Build
+
+To build the project, run the following Maven command:
+
+```bash
+mvn clean install
+```
+This will generate the executable JAR file in the target directory.
+
+## Usage
+To execute the program, run:
+
 ```bash
 java -jar target/postgres_log_parser.jar -h
 ```
