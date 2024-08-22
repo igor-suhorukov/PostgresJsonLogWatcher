@@ -2,20 +2,43 @@
 
 import java.io.IOException;
 
-<span class="fc" id="L5">public class EnrichmentOff implements LogEnricher{</span>
+/**
+ * A no-op implementation of {@link LogEnricher} that disables log enrichment.
+ *
+ * &lt;p&gt;This class is used as a fallback or default implementation when log enrichment is not needed or
+ * cannot be configured. It implements all methods of the {@link LogEnricher} interface but provides
+ * no operational functionality.&lt;/p&gt;
+ */
+<span class="fc" id="L12">public class EnrichmentOff implements LogEnricher{</span>
 
+    /**
+     * Returns {@code null} as no statement enrichment is performed.
+     *
+     * @param queryId the query ID (which is ignored).
+     * @return {@code null}.
+     */
     @Override
     public String getStatement(String queryId) {
-<span class="fc" id="L9">        return null;</span>
+<span class="fc" id="L22">        return null;</span>
     }
 
+    /**
+     * Returns {@code null} as this implementation has no application name.
+     *
+     * @return {@code null}.
+     */
     @Override
     public String enricherApplicationName() {
-<span class="fc" id="L14">        return null;</span>
+<span class="fc" id="L32">        return null;</span>
     }
 
+    /**
+     * Performs no action as there are no resources to close in this implementation.
+     *
+     * @throws IOException never thrown in this implementation
+     */
     @Override
     public void close() throws IOException {
-<span class="fc" id="L19">    }</span>
+<span class="fc" id="L42">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

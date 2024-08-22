@@ -5,13 +5,27 @@ import picocli.CommandLine;
 import java.io.InputStream;
 import java.util.Properties;
 
-<span class="fc" id="L8">public class VersionProvider implements CommandLine.IVersionProvider {</span>
+/**
+ * Provides the version information of the project.
+ *
+ * &lt;p&gt;This class implements the {@link CommandLine.IVersionProvider} interface to supply
+ * version information for the CLI application. The version information is read from
+ * a {@code version.properties} file located in the classpath.&lt;/p&gt;
+ */
+<span class="fc" id="L15">public class VersionProvider implements CommandLine.IVersionProvider {</span>
+
+    /**
+     * Retrieves the version information from the {@code version.properties} file.
+     *
+     * @return an array of strings containing the version information.
+     * @throws Exception if there is an error reading the version properties file.
+     */
     @Override
     public String[] getVersion() throws Exception {
-<span class="fc" id="L11">        try (InputStream inputStream = VersionProvider.class.getResourceAsStream(&quot;/version.properties&quot;)) {</span>
-<span class="fc" id="L12">            Properties properties = new Properties();</span>
-<span class="fc" id="L13">            properties.load(inputStream);</span>
-<span class="fc" id="L14">            return new String[]{properties.getProperty(&quot;project.version&quot;)};</span>
+<span class="fc" id="L25">        try (InputStream inputStream = VersionProvider.class.getResourceAsStream(&quot;/version.properties&quot;)) {</span>
+<span class="fc" id="L26">            Properties properties = new Properties();</span>
+<span class="fc" id="L27">            properties.load(inputStream);</span>
+<span class="fc" id="L28">            return new String[]{properties.getProperty(&quot;project.version&quot;)};</span>
         }
     }
 }
