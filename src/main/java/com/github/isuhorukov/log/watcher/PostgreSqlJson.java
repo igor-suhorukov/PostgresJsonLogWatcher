@@ -3,6 +3,7 @@ package com.github.isuhorukov.log.watcher;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import org.slf4j.Logger;
@@ -73,6 +74,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             description = "Path to file to save current processed position in log files. " +
                     "Required write capability for this program")
     String currentLogPositionFile;
+    @Getter
+    private WatchService fsWatchService;
 
     @SneakyThrows
     public static void main(String[] args) {
@@ -127,7 +130,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         positionFileTasks();
         initialLogImport(sourceDirectory);
         Path dirToWatch = Paths.get(watchDir);
-        try (WatchService watchService = getWatchService()) {
+        fsWatchService = getWatchService();
+        try (WatchService watchService = fsWatchService) {
             registerWatchEvent(dirToWatch, watchService);
             WatchKey key;
             while ((key = watchService.take()) != null) {
@@ -365,8 +369,9 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * @throws IOException if an I/O error occurs while managing the log file positions.
      */
     protected Thread positionFileTasks() throws IOException {
-        if(new File(currentLogPositionFile).exists()) {
-            position.putAll(mapper.readValue(new File(currentLogPositionFile),
+        File currentPositionFile = new File(currentLogPositionFile);
+        if(currentPositionFile.exists() && currentPositionFile.length()>0) {
+            position.putAll(mapper.readValue(currentPositionFile,
                     new TypeReference<ConcurrentHashMap<String, Long>>() {}));
         }
         new Timer("LogPositionSaver", true).schedule(new TimerTask() {
