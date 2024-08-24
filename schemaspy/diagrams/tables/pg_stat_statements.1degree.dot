@@ -37,7 +37,7 @@ digraph "oneDegreeRelationshipsDiagram" {
       <TR><TD PORT="wal_records" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="135" HEIGHT="16">wal_records</TD></TR></TABLE></TD><TD PORT="wal_records.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="wal_fpi" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="135" HEIGHT="16">wal_fpi</TD></TR></TABLE></TD><TD PORT="wal_fpi.type" ALIGN="LEFT">int8[19]</TD></TR>
       <TR><TD PORT="wal_bytes" COLSPAN="2" ALIGN="LEFT"><TABLE BORDER="0" CELLSPACING="0" ALIGN="LEFT"><TR ALIGN="LEFT"><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="15" HEIGHT="16"></TD><TD ALIGN="LEFT" FIXEDSIZE="TRUE" WIDTH="135" HEIGHT="16">wal_bytes</TD></TR></TABLE></TD><TD PORT="wal_bytes.type" ALIGN="LEFT">numeric[0]</TD></TR>
-      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 0</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">0 rows</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">0 &gt;</TD></TR>
+      <TR><TD ALIGN="LEFT" BGCOLOR="#ffffff">&lt; 0</TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">  </TD><TD ALIGN="RIGHT" BGCOLOR="#ffffff">0 &gt;</TD></TR>
     </TABLE>>
     URL="pg_stat_statements.html"
     target="_top"

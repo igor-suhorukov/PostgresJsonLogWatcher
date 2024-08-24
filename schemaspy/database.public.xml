@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?><database name="database" schema="public" type="PostgreSQL - 9.6.8">
+<?xml version="1.0" encoding="UTF-8"?><database name="database" schema="public" type="PostgreSQL - 16.4">
    <tables>
-      <table name="pg_stat_statements" numRows="0" remarks="emulated extension pg_stat_statements" schema="public" type="TABLE">
+      <table name="pg_stat_statements" remarks="emulated extension pg_stat_statements" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="userid" nullable="true" remarks="" size="10" type="oid" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="dbid" nullable="true" remarks="" size="10" type="oid" typeCode="-5"/>
          <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="toplevel" nullable="true" remarks="" size="1" type="bool" typeCode="-7"/>
