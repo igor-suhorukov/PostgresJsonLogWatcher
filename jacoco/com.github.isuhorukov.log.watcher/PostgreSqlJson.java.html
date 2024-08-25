@@ -252,8 +252,8 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 <span class="fc" id="L252">        Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields = jsonNode.fields();</span>
 
 <span class="fc" id="L254">        String message = jsonNode.at(&quot;/message&quot;).asText();</span>
-<span class="fc bfc" id="L255" title="All 4 branches covered.">        if(logEnricher.enricherApplicationName()!=null &amp;&amp; message.contains(logEnricher.enricherApplicationName())){</span>
-<span class="fc" id="L256">            return;</span>
+<span class="pc bpc" id="L255" title="1 of 4 branches missed.">        if(logEnricher.enricherApplicationName()!=null &amp;&amp; message.contains(logEnricher.enricherApplicationName())){</span>
+<span class="nc" id="L256">            return;</span>
         }
 
 <span class="fc" id="L259">        LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);</span>
@@ -291,8 +291,8 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
             ){
 <span class="fc" id="L292">                continue;</span>
             }
-<span class="fc bfc" id="L294" title="All 4 branches covered.">            if(&quot;application_name&quot;.equals(key) &amp;&amp; value.equals(logEnricher.enricherApplicationName())){</span>
-<span class="fc" id="L295">                return; //skip enricher log record by clientName</span>
+<span class="pc bpc" id="L294" title="1 of 4 branches missed.">            if(&quot;application_name&quot;.equals(key) &amp;&amp; value.equals(logEnricher.enricherApplicationName())){</span>
+<span class="nc" id="L295">                return; //skip enricher log record by clientName</span>
             }
 <span class="fc bfc" id="L297" title="All 2 branches covered.">            if(QUERY_ID.equals(key)){</span>
 <span class="fc" id="L298">                String queryId = value;</span>
@@ -370,7 +370,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      */
     protected Thread positionFileTasks() throws IOException {
 <span class="fc" id="L372">        File currentPositionFile = new File(currentLogPositionFile);</span>
-<span class="pc bpc" id="L373" title="1 of 4 branches missed.">        if(currentPositionFile.exists() &amp;&amp; currentPositionFile.length()&gt;0) {</span>
+<span class="pc bpc" id="L373" title="2 of 4 branches missed.">        if(currentPositionFile.exists() &amp;&amp; currentPositionFile.length()&gt;0) {</span>
 <span class="fc" id="L374">            position.putAll(mapper.readValue(currentPositionFile,</span>
 <span class="fc" id="L375">                    new TypeReference&lt;ConcurrentHashMap&lt;String, Long&gt;&gt;() {}));</span>
         }
