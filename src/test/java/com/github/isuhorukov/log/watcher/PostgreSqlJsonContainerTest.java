@@ -49,23 +49,33 @@ public class PostgreSqlJsonContainerTest {
     @SneakyThrows
     public void testWatchPostgreSqlLogsWithContainer(@TempDir Path tempDir) {
 
-        Path pgData = Files.createDirectory(tempDir.resolve("pg_data"));
-        log.info("PostgreSQL data directory in test {}",pgData);
+        Path pgData = createPgDataDirectory(tempDir);
+        log.info("PostgreSQL data directory for test {}",pgData);
         try(PostgreSQLContainer<?> postgresContainer = configurePostgresContainer(pgData)){
             startPostgreSqlContainer(postgresContainer);
 
-            PostgreSqlJson postgreSqlJson = getPostgreSqlJson(postgresContainer, pgData);
+            applicationProcessLog(postgresContainer, pgData);
 
-            executeSomeTestQueriesInPostgreSql(postgresContainer);
-
-            ExecutorService executorService = Executors.newSingleThreadExecutor();
-            Future<Integer> resultCode = startLogWatcher(executorService, postgreSqlJson);
-            waitEventsAndCloseLogWatcher(postgreSqlJson, resultCode);
-
-            shutdownExecutor(executorService);
-
-            assertExpectedLogEvents();
+            assertExpectedLogEvents(logCapture);
         }
+    }
+
+    public static void applicationProcessLog(PostgreSQLContainer<?> postgresContainer, Path pgData)
+                                                        throws SQLException, InterruptedException, IOException {
+
+        PostgreSqlJson postgreSqlJson = getPostgreSqlJson(postgresContainer, pgData);
+
+        executeSomeTestQueriesInPostgreSql(postgresContainer);
+
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+        Future<Integer> resultCode = startLogWatcher(executorService, postgreSqlJson);
+        waitEventsAndCloseLogWatcher(postgreSqlJson, resultCode);
+
+        shutdownExecutor(executorService);
+    }
+
+    public static Path createPgDataDirectory(Path tempDir) throws IOException {
+        return Files.createDirectory(tempDir.resolve("pg_data"));
     }
 
     public static PostgreSQLContainer<?> configurePostgresContainer(Path pgData) {
@@ -85,13 +95,13 @@ public class PostgreSqlJsonContainerTest {
                 .waitingFor(Wait.forLogMessage(".*Future log output will appear in directory.*", 1));
     }
 
-    public static void shutdownExecutor(ExecutorService executorService) throws InterruptedException {
+    static void shutdownExecutor(ExecutorService executorService) throws InterruptedException {
         executorService.shutdown();
         boolean termination = executorService.awaitTermination(1, TimeUnit.SECONDS);
         assertTrue(termination);
     }
 
-    public static void waitEventsAndCloseLogWatcher(PostgreSqlJson postgreSqlJson, Future<Integer> resultCode) throws InterruptedException, IOException {
+    static void waitEventsAndCloseLogWatcher(PostgreSqlJson postgreSqlJson, Future<Integer> resultCode) throws InterruptedException, IOException {
         Thread.sleep(TimeUnit.SECONDS.toMillis(1));
         postgreSqlJson.getFsWatchService().close();
         try {
@@ -103,7 +113,7 @@ public class PostgreSqlJsonContainerTest {
     }
 
     @NotNull
-    public static Future<Integer> startLogWatcher(ExecutorService executorService, PostgreSqlJson postgreSqlJson) {
+    static Future<Integer> startLogWatcher(ExecutorService executorService, PostgreSqlJson postgreSqlJson) {
         Future<Integer> resultCode = executorService.submit(postgreSqlJson::watchPostgreSqlLogs);
         while (postgreSqlJson.getFsWatchService()==null){
             Thread.yield();
@@ -118,7 +128,7 @@ public class PostgreSqlJsonContainerTest {
     }
 
     @SneakyThrows
-    public static PostgreSqlJson getPostgreSqlJson(PostgreSQLContainer<?> postgresContainer, Path pgData) {
+    static PostgreSqlJson getPostgreSqlJson(PostgreSQLContainer<?> postgresContainer, Path pgData) {
         PostgreSqlJson postgreSqlJson = new PostgreSqlJson();
         postgreSqlJson.setPosgreSqlHost(postgresContainer.getHost());
         postgreSqlJson.setPosgreSqlPort(postgresContainer.getFirstMappedPort());
@@ -132,7 +142,7 @@ public class PostgreSqlJsonContainerTest {
         return postgreSqlJson;
     }
 
-    public static void executeSomeTestQueriesInPostgreSql(PostgreSQLContainer<?> postgresContainer) throws SQLException {
+    static void executeSomeTestQueriesInPostgreSql(PostgreSQLContainer<?> postgresContainer) throws SQLException {
         try (Connection connection = postgresContainer.createConnection("");
              Statement statement = connection.createStatement();
              PreparedStatement preparedStatement = connection.prepareStatement(
@@ -149,14 +159,14 @@ public class PostgreSqlJsonContainerTest {
         }
     }
 
-    public void assertExpectedLogEvents() {
-        logCapture.assertLogged(info("starting PostgreSQL"));
-        logCapture.assertLogged(info("database system is ready to accept connections"));
-        logCapture.assertLogged(debug("autovacuum launcher started"));
-        logCapture.assertLogged(info("CREATE EXTENSION pg_stat_statements"));
-        logCapture.assertLogged(info("execute <unnamed>: select version()"));
-        logCapture.assertLogged(info("from generate_series"));
-        logCapture.assertLogged(debug("bind <unnamed> to S_1"));
-        logCapture.assertLogged(info("ending log output to stderr"));
+    public static void assertExpectedLogEvents(LogCapture logCapture1) {
+        logCapture1.assertLogged(info("starting PostgreSQL"));
+        logCapture1.assertLogged(info("database system is ready to accept connections"));
+        logCapture1.assertLogged(debug("autovacuum launcher started"));
+        logCapture1.assertLogged(info("CREATE EXTENSION pg_stat_statements"));
+        logCapture1.assertLogged(info("execute <unnamed>: select version()"));
+        logCapture1.assertLogged(info("from generate_series"));
+        logCapture1.assertLogged(debug("bind <unnamed> to S_1"));
+        logCapture1.assertLogged(info("ending log output to stderr"));
     }
 }
