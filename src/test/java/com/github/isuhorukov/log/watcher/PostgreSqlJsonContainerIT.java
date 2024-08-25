@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
-public class PostgreSqlJsonContainerTest {
+public class PostgreSqlJsonContainerIT {
 
     @RegisterExtension
     public LogCapture logCapture = LogCapture.forCurrentPackage();

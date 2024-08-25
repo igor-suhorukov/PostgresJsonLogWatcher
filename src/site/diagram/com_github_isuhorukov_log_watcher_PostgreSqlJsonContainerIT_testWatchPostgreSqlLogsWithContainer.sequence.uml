@@ -1,0 +1,458 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+participant PostgreSqlJsonContainerIT as "PostgreSqlJsonContainerIT"
+participant PostgreSqlJson as "PostgreSqlJson"
+participant LogEnricherPostgreSql as "LogEnricherPostgreSql"
+participant Database as "Database"
+  [->PostgreSqlJsonContainerIT: testWatchPostgreSqlLogsWithContainer <color:gray> 1130 ms</color>
+  activate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>createPgDataDirectory</u> <color:gray> 12.2 ms</color>
+    activate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: sun.nio.fs.UnixPath
+    deactivate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>configurePostgresContainer</u> <color:gray> 17.9 ms</color>
+    activate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: org.testcontainers.containers.PostgreSQLContainer
+    deactivate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>startPostgreSqlContainer</u> <color:gray> 781 ms</color>
+    activate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT->Database: CREATE EXTENSION pg_stat_statements <color:gray> 2.93 ms</color>
+    PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: void
+    deactivate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>applicationProcessLog</u> <color:gray> 293 ms</color>
+    activate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>getPostgreSqlJson</u> <color:gray> 56.8 ms</color>
+      activate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: com.github.isuhorukov.log.watcher.PostgreSqlJson
+      deactivate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>executeSomeTestQueriesInPostgreSql</u> <color:gray> 18.7 ms</color>
+      activate PostgreSqlJsonContainerIT
+        PostgreSqlJsonContainerIT->Database: SELECT * from generate_series(1, 100) g where g=? <color:gray> 5.82 ms</color>
+        PostgreSqlJsonContainerIT->Database: select version() <color:gray> 2.26 ms</color>
+      PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: void
+      deactivate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>startLogWatcher</u> <color:gray> 116 ms</color>
+      activate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: java.util.concurrent.FutureTask
+      deactivate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>waitEventsAndCloseLogWatcher</u> <color:gray> 101 ms</color>
+      activate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: void
+      deactivate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>shutdownExecutor</u> <color:gray> 0.125 ms</color>
+      activate PostgreSqlJsonContainerIT
+      PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: void
+      deactivate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: void
+    deactivate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT->PostgreSqlJsonContainerIT: <u>assertExpectedLogEvents</u> <color:gray> 1.22 ms</color>
+    activate PostgreSqlJsonContainerIT
+    PostgreSqlJsonContainerIT<--PostgreSqlJsonContainerIT: void
+    deactivate PostgreSqlJsonContainerIT
+  [<--PostgreSqlJsonContainerIT: void
+  deactivate PostgreSqlJsonContainerIT
+  [->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 216 ms</color>
+  activate PostgreSqlJson
+    PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 15 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->Database: select query from pg_stat_statements where queryid <color:gray> 0.0712 ms</color>
+      Note right
+select query from pg_stat_statements where queryid=?
+      End note
+      PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.624 ms</color>
+      activate LogEnricherPostgreSql
+      PostgreSqlJson<--LogEnricherPostgreSql: void
+      deactivate LogEnricherPostgreSql
+    PostgreSqlJson<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+    PostgreSqlJson->PostgreSqlJson: positionFileTasks <color:gray> 0.225 ms</color>
+    activate PostgreSqlJson
+    PostgreSqlJson<--PostgreSqlJson: java.lang.Thread
+    deactivate PostgreSqlJson
+    PostgreSqlJson->PostgreSqlJson: initialLogImport <color:gray> 100 ms</color>
+    activate PostgreSqlJson
+      PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 56.1 ms</color>
+      activate PostgreSqlJson
+        Loop 51 times <color:gray> 13.4 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 13.4 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 2.79 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 2.79 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 3 times <color:gray> 0.391 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.391 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.146 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.146 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 4 times <color:gray> 2.24 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 2.24 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.232 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.232 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+            PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 1.39 ms</color>
+            activate LogEnricherPostgreSql
+            PostgreSqlJson<--LogEnricherPostgreSql: string
+            deactivate LogEnricherPostgreSql
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 6 times <color:gray> 0.671 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.671 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.239 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.239 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 6 times <color:gray> 0.513 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.513 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.175 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.175 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 2 times <color:gray> 0.499 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.499 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.0642 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0642 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+            PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.256 ms</color>
+            activate LogEnricherPostgreSql
+            PostgreSqlJson<--LogEnricherPostgreSql: string
+            deactivate LogEnricherPostgreSql
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 3 times <color:gray> 0.411 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.411 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.179 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.179 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 4 times <color:gray> 0.932 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.932 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.17 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.17 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+            PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.408 ms</color>
+            activate LogEnricherPostgreSql
+            PostgreSqlJson<--LogEnricherPostgreSql: string
+            deactivate LogEnricherPostgreSql
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 6 times <color:gray> 0.699 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.699 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.238 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.238 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 376 times <color:gray> 17.9 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 17.9 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 5.73 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 5.73 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+      PostgreSqlJson<--PostgreSqlJson: void
+      deactivate PostgreSqlJson
+      PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 43.9 ms</color>
+      activate PostgreSqlJson
+        Loop 2 times <color:gray> 2.9 ms</color>
+          Loop ~61 times <color:gray> 2.37 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 2.37 ms</color>
+            activate PostgreSqlJson
+              Loop ~2 times <color:gray> 0.678 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.678 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+          Loop ~2 times <color:gray> 0.534 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.534 ms</color>
+            activate PostgreSqlJson
+              Loop ~2 times <color:gray> 0.035 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.035 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+              PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.333 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+        End
+        Loop 2 times <color:gray> 0.0646 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.0646 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.017 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.017 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 2 times <color:gray> 1.57 ms</color>
+          Loop ~4 times <color:gray> 0.217 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.217 ms</color>
+            activate PostgreSqlJson
+              Loop ~3 times <color:gray> 0.0664 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0664 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+          Loop ~2 times <color:gray> 1.35 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 1.35 ms</color>
+            activate PostgreSqlJson
+              Loop ~3 times <color:gray> 0.136 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.136 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+              PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.766 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+        End
+        Loop 6 times <color:gray> 0.224 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.224 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.0751 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0751 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 3 times <color:gray> 1.68 ms</color>
+          Loop ~6 times <color:gray> 0.432 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.432 ms</color>
+            activate PostgreSqlJson
+              Loop ~2 times <color:gray> 0.126 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.126 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+          Loop ~7 times <color:gray> 1.25 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 1.25 ms</color>
+            activate PostgreSqlJson
+              Loop ~2 times <color:gray> 0.0891 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0891 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+              PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.797 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: void
+              deactivate LogEnricherPostgreSql
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+        End
+        Loop 2 times <color:gray> 0.052 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.052 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.0145 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0145 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 6 times <color:gray> 3.25 ms</color>
+          Loop ~4 times <color:gray> 0.917 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.917 ms</color>
+            activate PostgreSqlJson
+              Loop ~3 times <color:gray> 0.292 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.292 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+          Loop ~3 times <color:gray> 2.33 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 2.33 ms</color>
+            activate PostgreSqlJson
+              Loop ~3 times <color:gray> 0.197 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.197 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+              PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 1.47 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+        End
+        Loop 5 times <color:gray> 1.5 ms</color>
+          Loop ~5 times <color:gray> 0.812 ms</color>
+            PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.812 ms</color>
+            activate PostgreSqlJson
+              Loop ~3 times <color:gray> 0.263 ms</color>
+                PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.263 ms</color>
+                activate LogEnricherPostgreSql
+                PostgreSqlJson<--LogEnricherPostgreSql: string
+                deactivate LogEnricherPostgreSql
+              End
+            PostgreSqlJson<--PostgreSqlJson: void
+            deactivate PostgreSqlJson
+          End
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.692 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.057 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.057 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+            PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.424 ms</color>
+            activate LogEnricherPostgreSql
+            PostgreSqlJson<--LogEnricherPostgreSql: string
+            deactivate LogEnricherPostgreSql
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 11 times <color:gray> 0.359 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.359 ms</color>
+          activate PostgreSqlJson
+            Loop ~3 times <color:gray> 0.12 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.12 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 16 times <color:gray> 0.417 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.417 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.13 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.13 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 2 times <color:gray> 0.301 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.301 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.0155 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0155 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+            PostgreSqlJson->LogEnricherPostgreSql: getStatement <color:gray> 0.22 ms</color>
+            activate LogEnricherPostgreSql
+            PostgreSqlJson<--LogEnricherPostgreSql: string
+            deactivate LogEnricherPostgreSql
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+        Loop 7 times <color:gray> 0.176 ms</color>
+          PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.176 ms</color>
+          activate PostgreSqlJson
+            Loop ~2 times <color:gray> 0.0543 ms</color>
+              PostgreSqlJson->LogEnricherPostgreSql: enricherApplicationName <color:gray> 0.0543 ms</color>
+              activate LogEnricherPostgreSql
+              PostgreSqlJson<--LogEnricherPostgreSql: string
+              deactivate LogEnricherPostgreSql
+            End
+          PostgreSqlJson<--PostgreSqlJson: void
+          deactivate PostgreSqlJson
+        End
+      PostgreSqlJson<--PostgreSqlJson: void
+      deactivate PostgreSqlJson
+    PostgreSqlJson<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+    PostgreSqlJson->PostgreSqlJson: registerWatchEvent <color:gray> 0.13 ms</color>
+    activate PostgreSqlJson
+    PostgreSqlJson<--PostgreSqlJson: void
+    deactivate PostgreSqlJson
+  [<--PostgreSqlJson: <i>exception!</i>
+  deactivate PostgreSqlJson
+@enduml

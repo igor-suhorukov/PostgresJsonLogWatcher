@@ -7,5 +7,5 @@ import org.junit.platform.suite.api.Suite;
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("com/github/isuhorukov/log/watcher")
-public class CucumberRunnerTest {
+public class CucumberRunnerIT {
 }

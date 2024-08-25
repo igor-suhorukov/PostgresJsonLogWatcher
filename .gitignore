@@ -5,3 +5,5 @@
 /src/site/markdown/diagram.md
 /appmap.yml
 /appmap-linux-x64
+/.allure/*
+/allure-results/*

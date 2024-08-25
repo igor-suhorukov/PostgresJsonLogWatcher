@@ -13,7 +13,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static com.github.isuhorukov.log.watcher.PostgreSqlJsonContainerTest.*;
+import static com.github.isuhorukov.log.watcher.PostgreSqlJsonContainerIT.*;
 
 public class PostgreSqlJsonContainerSteps {
     private Path tempDir;
