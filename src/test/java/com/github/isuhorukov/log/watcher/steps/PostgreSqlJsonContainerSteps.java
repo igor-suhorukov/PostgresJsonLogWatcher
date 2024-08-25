@@ -20,7 +20,7 @@ public class PostgreSqlJsonContainerSteps {
 
     private Path pgData;
     private PostgreSQLContainer<?> postgresContainer;
-    private LogCapture logCapture = LogCapture.forPackages("com.github.isuhorukov.log.watcher");
+    private final LogCapture logCapture = LogCapture.forPackages("com.github.isuhorukov.log.watcher");
 
 
     @Before
@@ -49,17 +49,17 @@ public class PostgreSqlJsonContainerSteps {
 
     @When("I start the PostgreSQL container with specific logging configurations")
     @SneakyThrows
-    public void i_start_the_postgresql_container_with_specific_logging_configurations() throws Exception {
+    public void i_start_the_postgresql_container_with_specific_logging_configurations() {
         startPostgreSqlContainer(postgresContainer);
     }
 
-    @Then("the application should detect and process log entries from the PostgreSQL logs")
+    @Then("application should detect and process log entries from the PostgreSQL logs")
     @SneakyThrows
     public void the_application_should_detect_and_process_log_entries_from_the_postgresql_logs() {
         applicationProcessLog(postgresContainer, pgData);
     }
 
-    @And("logs are generated in the specified directory")
+    @And("logs are generated in the specified directory and watched & processed by postgres_log_parser")
     @SneakyThrows
     public void logsAreGeneratedInTheSpecifiedDirectory() {
         assertExpectedLogEvents(logCapture);
