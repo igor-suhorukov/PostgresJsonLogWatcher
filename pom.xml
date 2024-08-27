@@ -8,7 +8,7 @@
     <artifactId>PostgresLogParser</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <description>This program reads PostgreSQL DBMS logs in JSON format and sends them to OpenTelemetry collector</description>
+    <description>The project provides a tool for monitoring PostgreSQL logs in JSON format and sending the logs to an OpenTelemetry collector</description>
     <url>https://github.com/igor-suhorukov/PostgresJsonLogWatcher</url>
 
     <issueManagement>
