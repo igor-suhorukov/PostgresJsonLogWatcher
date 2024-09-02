@@ -4,4 +4,4 @@ PostgresLogParser,com.github.isuhorukov.log.watcher,VersionProvider,0,25,0,0,0,5
 PostgresLogParser,com.github.isuhorukov.log.watcher,LogEnricherPostgreSql,5,115,2,10,0,25,2,9,0,5
 PostgresLogParser,com.github.isuhorukov.log.watcher,PostgreSqlJson.new TypeReference() {...},0,6,0,0,0,1,0,1,0,1
 PostgresLogParser,com.github.isuhorukov.log.watcher,PostgreSqlJson.new TimerTask() {...},0,10,0,0,0,3,0,2,0,2
-PostgresLogParser,com.github.isuhorukov.log.watcher,PostgreSqlJson,19,713,18,86,4,160,19,56,1,18
+PostgresLogParser,com.github.isuhorukov.log.watcher,PostgreSqlJson,28,742,19,89,5,167,20,61,1,22

@@ -239,116 +239,138 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
     void parseLogLine(String line, String logName){
 <span class="fc" id="L240">        JsonNode jsonNode = mapper.readTree(line);</span>
 <span class="fc" id="L241">        Level severity = getSeverity(jsonNode.at(&quot;/error_severity&quot;).asText());</span>
-<span class="pc bpc" id="L242" title="1 of 6 branches missed.">        switch (severity){</span>
+<span class="pc bpc" id="L242" title="1 of 2 branches missed.">        if (skipProcessing(severity)) return;</span>
+
+<span class="fc" id="L244">        Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields = jsonNode.fields();</span>
+
+<span class="fc" id="L246">        String message = jsonNode.at(&quot;/message&quot;).asText();</span>
+<span class="fc bfc" id="L247" title="All 4 branches covered.">        if(logEnricher.enricherApplicationName()!=null &amp;&amp; message.contains(logEnricher.enricherApplicationName())){</span>
+<span class="fc" id="L248">            return;</span>
+        }
+<span class="fc" id="L250">        LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">        if(message.startsWith(DURATION)){</span>
+<span class="fc" id="L252">            loggingEventBuilder = parseDuration(message, loggingEventBuilder);</span>
+        } else {
+<span class="fc" id="L254">            loggingEventBuilder = loggingEventBuilder.setMessage(message);</span>
+<span class="fc bfc" id="L255" title="All 2 branches covered.">            if(message.startsWith(&quot;statement: &quot;)){</span>
+<span class="fc" id="L256">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement&quot;, true);</span>
+            } else
+<span class="fc bfc" id="L258" title="All 2 branches covered.">            if(message.startsWith(&quot;execute&quot;)){</span>
+<span class="fc" id="L259">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;execute&quot;, true);</span>
+            }
+        }
+<span class="fc" id="L262">        loggingEventBuilder = processLogRecordAttributes(fields, loggingEventBuilder);</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">        if (loggingEventBuilder == null) return; //skip enricher log record by clientName</span>
+<span class="fc" id="L264">        loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;fileName&quot;, logName);</span>
+<span class="fc" id="L265">        loggingEventBuilder.log();</span>
+<span class="fc" id="L266">    }</span>
+
+    private boolean skipProcessing(Level severity) {
+<span class="pc bpc" id="L269" title="1 of 6 branches missed.">        switch (severity){</span>
             case TRACE:
-<span class="pc bpc" id="L244" title="1 of 2 branches missed.">                if(!logger.isTraceEnabled()) return;</span>
+<span class="pc bpc" id="L271" title="1 of 2 branches missed.">                if(!logger.isTraceEnabled()) return true;</span>
                 break;
             case DEBUG:
-<span class="pc bpc" id="L247" title="1 of 2 branches missed.">                if(!logger.isDebugEnabled()) return;</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">                if(!logger.isDebugEnabled()) return true;</span>
                 break;
             case INFO:
-<span class="pc bpc" id="L250" title="1 of 2 branches missed.">                if(!logger.isInfoEnabled()) return;</span>
+<span class="pc bpc" id="L277" title="1 of 2 branches missed.">                if(!logger.isInfoEnabled()) return true;</span>
                 break;
             case WARN:
-<span class="pc bpc" id="L253" title="1 of 2 branches missed.">                if(!logger.isWarnEnabled()) return;</span>
+<span class="pc bpc" id="L280" title="1 of 2 branches missed.">                if(!logger.isWarnEnabled()) return true;</span>
                 break;
             case ERROR:
-<span class="pc bpc" id="L256" title="1 of 2 branches missed.">                if(!logger.isErrorEnabled()) return;</span>
+<span class="pc bpc" id="L283" title="1 of 2 branches missed.">                if(!logger.isErrorEnabled()) return true;</span>
                 break;
         }
+<span class="fc" id="L286">        return false;</span>
+    }
 
-<span class="fc" id="L260">        Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields = jsonNode.fields();</span>
-
-<span class="fc" id="L262">        String message = jsonNode.at(&quot;/message&quot;).asText();</span>
-<span class="fc bfc" id="L263" title="All 4 branches covered.">        if(logEnricher.enricherApplicationName()!=null &amp;&amp; message.contains(logEnricher.enricherApplicationName())){</span>
-<span class="fc" id="L264">            return;</span>
-        }
-
-<span class="fc" id="L267">        LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);</span>
-<span class="fc bfc" id="L268" title="All 2 branches covered.">        if(message.startsWith(DURATION)){</span>
-<span class="fc" id="L269">            int msEndIndex = message.indexOf(MS);</span>
-<span class="fc" id="L270">            double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));</span>
-<span class="fc" id="L271">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;duration&quot;, duration);</span>
-<span class="fc" id="L272">            int planIdx = message.indexOf(PLAN);</span>
-<span class="fc bfc" id="L273" title="All 2 branches covered.">            if(planIdx!=-1){</span>
-<span class="fc" id="L274">                String plan = message.substring(planIdx + PLAN.length());</span>
-<span class="fc" id="L275">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;plan&quot;, plan);</span>
-<span class="fc" id="L276">            } else</span>
-<span class="fc bfc" id="L277" title="All 2 branches covered.">            if(message.indexOf(&quot; parse &quot;,msEndIndex+2)&gt;-1){</span>
-<span class="fc" id="L278">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;parse&quot;, true);</span>
-            } else
-<span class="fc bfc" id="L280" title="All 2 branches covered.">            if(message.indexOf(&quot; bind &quot;,msEndIndex+2)&gt;-1){</span>
-<span class="fc" id="L281">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;bind&quot;, true);</span>
-            }
-<span class="fc" id="L283">            loggingEventBuilder = loggingEventBuilder.setMessage(&quot;&quot;);</span>
-<span class="fc" id="L284">        } else {</span>
-<span class="fc" id="L285">            loggingEventBuilder = loggingEventBuilder.setMessage(message);</span>
-<span class="fc bfc" id="L286" title="All 2 branches covered.">            if(message.startsWith(&quot;statement: &quot;)){</span>
-<span class="fc" id="L287">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement&quot;, true);</span>
-            } else
-<span class="fc bfc" id="L289" title="All 2 branches covered.">            if(message.startsWith(&quot;execute&quot;)){</span>
-<span class="fc" id="L290">                loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;execute&quot;, true);</span>
-            }
-        }
-<span class="fc bfc" id="L293" title="All 2 branches covered.">        while (fields.hasNext()) {</span>
-<span class="fc" id="L294">            Map.Entry&lt;String, JsonNode&gt; entry = fields.next();</span>
-<span class="fc" id="L295">            String key = entry.getKey();</span>
-<span class="fc" id="L296">            String value = entry.getValue().asText();</span>
-<span class="fc bfc" id="L297" title="All 2 branches covered.">            if(&quot;message&quot;.equals(key) ||</span>
-<span class="fc bfc" id="L298" title="All 4 branches covered.">                    (QUERY_ID.equals(key) &amp;&amp; &quot;0&quot;.equals(value)) //skip empty query_id</span>
+    private LoggingEventBuilder processLogRecordAttributes(Iterator&lt;Map.Entry&lt;String, JsonNode&gt;&gt; fields,
+                                                           LoggingEventBuilder loggingEventBuilder) {
+<span class="fc bfc" id="L291" title="All 2 branches covered.">        while (fields.hasNext()) {</span>
+<span class="fc" id="L292">            Map.Entry&lt;String, JsonNode&gt; entry = fields.next();</span>
+<span class="fc" id="L293">            String key = entry.getKey();</span>
+<span class="fc" id="L294">            String value = entry.getValue().asText();</span>
+<span class="fc bfc" id="L295" title="All 2 branches covered.">            if(&quot;message&quot;.equals(key) ||</span>
+<span class="fc bfc" id="L296" title="All 4 branches covered.">                    (QUERY_ID.equals(key) &amp;&amp; &quot;0&quot;.equals(value)) //skip empty query_id</span>
             ){
-<span class="fc" id="L300">                continue;</span>
+<span class="fc" id="L298">                continue;</span>
             }
-<span class="fc bfc" id="L302" title="All 4 branches covered.">            if(&quot;application_name&quot;.equals(key) &amp;&amp; value.equals(logEnricher.enricherApplicationName())){</span>
-<span class="fc" id="L303">                return; //skip enricher log record by clientName</span>
+<span class="fc bfc" id="L300" title="All 4 branches covered.">            if(&quot;application_name&quot;.equals(key) &amp;&amp; value.equals(logEnricher.enricherApplicationName())){</span>
+<span class="fc" id="L301">                return null;</span>
             }
-<span class="fc bfc" id="L305" title="All 2 branches covered.">            if(QUERY_ID.equals(key)){</span>
-<span class="fc" id="L306">                String queryId = value;</span>
-<span class="fc" id="L307">                String statement = logEnricher.getStatement(queryId);</span>
-<span class="pc bpc" id="L308" title="1 of 4 branches missed.">                if(statement!=null &amp;&amp; !statement.isEmpty()){</span>
-<span class="fc" id="L309">                    loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement_text&quot;, statement);</span>
-                }
+<span class="fc bfc" id="L303" title="All 2 branches covered.">            if(QUERY_ID.equals(key)){</span>
+<span class="fc" id="L304">                loggingEventBuilder = enrichWithStatementText(value, loggingEventBuilder);</span>
             }
-<span class="fc" id="L312">            JsonNode entryValue = entry.getValue();</span>
-<span class="fc" id="L313">            loggingEventBuilder = loggingEventBuilder.addKeyValue(key, getValue(entryValue));</span>
-<span class="fc" id="L314">        }</span>
-<span class="fc" id="L315">        loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;fileName&quot;, logName);</span>
-<span class="fc" id="L316">        loggingEventBuilder.log();</span>
-<span class="fc" id="L317">    }</span>
+<span class="fc" id="L306">            JsonNode entryValue = entry.getValue();</span>
+<span class="fc" id="L307">            loggingEventBuilder = loggingEventBuilder.addKeyValue(key, getValue(entryValue));</span>
+<span class="fc" id="L308">        }</span>
+<span class="fc" id="L309">        return loggingEventBuilder;</span>
+    }
+
+    private LoggingEventBuilder enrichWithStatementText(String queryId, LoggingEventBuilder loggingEventBuilder) {
+<span class="fc" id="L313">        String statement = logEnricher.getStatement(queryId);</span>
+<span class="pc bpc" id="L314" title="1 of 4 branches missed.">        if(statement!=null &amp;&amp; !statement.isEmpty()){</span>
+<span class="fc" id="L315">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;statement_text&quot;, statement);</span>
+        }
+<span class="fc" id="L317">        return loggingEventBuilder;</span>
+    }
+
+    private LoggingEventBuilder parseDuration(String message, LoggingEventBuilder loggingEventBuilder) {
+<span class="fc" id="L321">        int msEndIndex = message.indexOf(MS);</span>
+<span class="fc" id="L322">        double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));</span>
+<span class="fc" id="L323">        loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;duration&quot;, duration);</span>
+<span class="fc" id="L324">        int planIdx = message.indexOf(PLAN);</span>
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if(planIdx!=-1){</span>
+<span class="fc" id="L326">            String plan = message.substring(planIdx + PLAN.length());</span>
+<span class="fc" id="L327">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;plan&quot;, plan);</span>
+<span class="fc" id="L328">        } else</span>
+<span class="fc bfc" id="L329" title="All 2 branches covered.">        if(message.indexOf(&quot; parse &quot;,msEndIndex+2)&gt;-1){</span>
+<span class="fc" id="L330">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;parse&quot;, true);</span>
+        } else
+<span class="fc bfc" id="L332" title="All 2 branches covered.">        if(message.indexOf(&quot; bind &quot;,msEndIndex+2)&gt;-1){</span>
+<span class="fc" id="L333">            loggingEventBuilder = loggingEventBuilder.addKeyValue(&quot;bind&quot;, true);</span>
+        }
+<span class="fc" id="L335">        loggingEventBuilder = loggingEventBuilder.setMessage(&quot;&quot;);</span>
+<span class="fc" id="L336">        return loggingEventBuilder;</span>
+    }
 
     private static Object getValue(JsonNode entryValue) {
-<span class="fc bfc" id="L320" title="All 2 branches covered.">        switch (entryValue.getNodeType()){</span>
+<span class="fc bfc" id="L340" title="All 2 branches covered.">        switch (entryValue.getNodeType()){</span>
             case NUMBER:
-<span class="pc bpc" id="L322" title="1 of 3 branches missed.">                switch (entryValue.numberType()){</span>
+<span class="pc bpc" id="L342" title="1 of 3 branches missed.">                switch (entryValue.numberType()){</span>
                     case INT:
-<span class="fc" id="L324">                        return entryValue.asInt();</span>
+<span class="fc" id="L344">                        return entryValue.asInt();</span>
                     case LONG:
-<span class="fc" id="L326">                        return entryValue.asLong();</span>
+<span class="fc" id="L346">                        return entryValue.asLong();</span>
+                    default:
+<span class="nc" id="L348">                        return entryValue.asText();</span>
                 }
             case STRING:
             default:
-<span class="fc" id="L330">                return entryValue.asText();</span>
+<span class="fc" id="L352">                return entryValue.asText();</span>
         }
     }
 
     private static Level getSeverity(String severity) {
         //https://www.postgresql.org/docs/current/runtime-config-logging.html#RUNTIME-CONFIG-SEVERITY-LEVELS
-<span class="fc bfc" id="L336" title="All 5 branches covered.">        switch (severity){</span>
+<span class="fc bfc" id="L358" title="All 5 branches covered.">        switch (severity){</span>
             case &quot;DEBUG&quot;:
             case &quot;DEBUG5&quot;:
             case &quot;DEBUG4&quot;:
             case &quot;DEBUG3&quot;:
             case &quot;DEBUG2&quot;:
-<span class="fc" id="L342">            case &quot;DEBUG1&quot;: return Level.DEBUG;</span>
+<span class="fc" id="L364">            case &quot;DEBUG1&quot;: return Level.DEBUG;</span>
             case &quot;LOG&quot;:
             case &quot;INFO&quot;:
-<span class="fc" id="L345">            case &quot;NOTICE&quot;: return Level.INFO;</span>
-<span class="fc" id="L346">            case &quot;WARNING&quot;: return Level.WARN;</span>
+<span class="fc" id="L367">            case &quot;NOTICE&quot;: return Level.INFO;</span>
+<span class="fc" id="L368">            case &quot;WARNING&quot;: return Level.WARN;</span>
             case &quot;ERROR&quot;:
             case &quot;FATAL&quot;:
-<span class="fc" id="L349">            case &quot;PANIC&quot;: return Level.ERROR;</span>
+<span class="fc" id="L371">            case &quot;PANIC&quot;: return Level.ERROR;</span>
             default:
-<span class="fc" id="L351">                return Level.TRACE;</span>
+<span class="fc" id="L373">                return Level.TRACE;</span>
         }
     }
 
@@ -377,20 +399,20 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      * @throws IOException if an I/O error occurs while managing the log file positions.
      */
     protected Thread positionFileTasks() throws IOException {
-<span class="fc" id="L380">        File currentPositionFile = new File(currentLogPositionFile);</span>
-<span class="pc bpc" id="L381" title="1 of 4 branches missed.">        if(currentPositionFile.exists() &amp;&amp; currentPositionFile.length()&gt;0) {</span>
-<span class="fc" id="L382">            position.putAll(mapper.readValue(currentPositionFile,</span>
-<span class="fc" id="L383">                    new TypeReference&lt;ConcurrentHashMap&lt;String, Long&gt;&gt;() {}));</span>
+<span class="fc" id="L402">        File currentPositionFile = new File(currentLogPositionFile);</span>
+<span class="pc bpc" id="L403" title="1 of 4 branches missed.">        if(currentPositionFile.exists() &amp;&amp; currentPositionFile.length()&gt;0) {</span>
+<span class="fc" id="L404">            position.putAll(mapper.readValue(currentPositionFile,</span>
+<span class="fc" id="L405">                    new TypeReference&lt;ConcurrentHashMap&lt;String, Long&gt;&gt;() {}));</span>
         }
-<span class="fc" id="L385">        new Timer(&quot;LogPositionSaver&quot;, true).schedule(new TimerTask() {</span>
+<span class="fc" id="L407">        new Timer(&quot;LogPositionSaver&quot;, true).schedule(new TimerTask() {</span>
             @Override
             public void run() {
-<span class="fc" id="L388">                saveLogFilesPosition();</span>
-<span class="fc" id="L389">            }</span>
-<span class="fc" id="L390">        }, TimeUnit.SECONDS.toMillis(saveInterval), TimeUnit.SECONDS.toMillis(saveInterval));</span>
-<span class="fc" id="L391">        Thread savePostitionShutdownHook = new Thread(this::saveLogFilesPosition);</span>
-<span class="fc" id="L392">        Runtime.getRuntime().addShutdownHook(savePostitionShutdownHook);</span>
-<span class="fc" id="L393">        return savePostitionShutdownHook;</span>
+<span class="fc" id="L410">                saveLogFilesPosition();</span>
+<span class="fc" id="L411">            }</span>
+<span class="fc" id="L412">        }, TimeUnit.SECONDS.toMillis(saveInterval), TimeUnit.SECONDS.toMillis(saveInterval));</span>
+<span class="fc" id="L413">        Thread savePostitionShutdownHook = new Thread(this::saveLogFilesPosition);</span>
+<span class="fc" id="L414">        Runtime.getRuntime().addShutdownHook(savePostitionShutdownHook);</span>
+<span class="fc" id="L415">        return savePostitionShutdownHook;</span>
     }
 
     /**
@@ -403,16 +425,16 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      */
     protected synchronized void saveLogFilesPosition() {
         try {
-<span class="pc bpc" id="L406" title="1 of 2 branches missed.">            if(position.isEmpty()){</span>
-<span class="nc" id="L407">                return;</span>
+<span class="pc bpc" id="L428" title="1 of 2 branches missed.">            if(position.isEmpty()){</span>
+<span class="nc" id="L429">                return;</span>
             }
-<span class="fc" id="L409">            try (FileOutputStream currentPostitionFile = new FileOutputStream(currentLogPositionFile)){</span>
-<span class="fc" id="L410">                mapper.writeValue(currentPostitionFile,new TreeMap&lt;&gt;(position));</span>
+<span class="fc" id="L431">            try (FileOutputStream currentPostitionFile = new FileOutputStream(currentLogPositionFile)){</span>
+<span class="fc" id="L432">                mapper.writeValue(currentPostitionFile,new TreeMap&lt;&gt;(position));</span>
             }
-<span class="fc" id="L412">        } catch (Exception e) {</span>
-<span class="fc" id="L413">            cliLogger.error(&quot;Unable to save current log position&quot;, e);</span>
-<span class="fc" id="L414">        }</span>
-<span class="fc" id="L415">    }</span>
+<span class="fc" id="L434">        } catch (Exception e) {</span>
+<span class="fc" id="L435">            cliLogger.error(&quot;Unable to save current log position&quot;, e);</span>
+<span class="fc" id="L436">        }</span>
+<span class="fc" id="L437">    }</span>
 
     /**
      * Reads a JSON log file and processes each line.
@@ -424,27 +446,27 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      * @throws IOException if an error occurs while reading the log file
      */
     void readJsonLog(File jsonLog) throws IOException {
-<span class="fc" id="L427">        String jsonLogName = jsonLog.getName();</span>
-<span class="fc" id="L428">        long from = position.computeIfAbsent(jsonLogName, name -&gt; 0L);</span>
-<span class="pc bpc" id="L429" title="1 of 2 branches missed.">        if(jsonLog.length() ==0){</span>
-<span class="nc" id="L430">            return;</span>
+<span class="fc" id="L449">        String jsonLogName = jsonLog.getName();</span>
+<span class="fc" id="L450">        long from = position.computeIfAbsent(jsonLogName, name -&gt; 0L);</span>
+<span class="pc bpc" id="L451" title="1 of 2 branches missed.">        if(jsonLog.length() ==0){</span>
+<span class="nc" id="L452">            return;</span>
         }
-<span class="pc bpc" id="L432" title="2 of 4 branches missed.">        if(jsonLog.length()==0 || jsonLog.length()&lt;=position.computeIfAbsent(jsonLogName, name -&gt; 0L)){</span>
-<span class="nc" id="L433">            return;</span>
+<span class="pc bpc" id="L454" title="2 of 4 branches missed.">        if(jsonLog.length()==0 || jsonLog.length()&lt;=position.computeIfAbsent(jsonLogName, name -&gt; 0L)){</span>
+<span class="nc" id="L455">            return;</span>
         }
-<span class="fc" id="L435">        try (RandomAccessFile randomAccessJson = new RandomAccessFile(jsonLog, &quot;r&quot;)) {</span>
-<span class="fc" id="L436">            randomAccessJson.seek(from);</span>
+<span class="fc" id="L457">        try (RandomAccessFile randomAccessJson = new RandomAccessFile(jsonLog, &quot;r&quot;)) {</span>
+<span class="fc" id="L458">            randomAccessJson.seek(from);</span>
             String line;
-<span class="fc bfc" id="L438" title="All 2 branches covered.">            while ((line = randomAccessJson.readLine())!= null) {</span>
-<span class="fc" id="L439">                parseLogLine(line, jsonLogName);</span>
+<span class="fc bfc" id="L460" title="All 2 branches covered.">            while ((line = randomAccessJson.readLine())!= null) {</span>
+<span class="fc" id="L461">                parseLogLine(line, jsonLogName);</span>
             }
         }
-<span class="fc" id="L442">        position.put(jsonLogName, jsonLog.length());</span>
-<span class="fc" id="L443">    }</span>
+<span class="fc" id="L464">        position.put(jsonLogName, jsonLog.length());</span>
+<span class="fc" id="L465">    }</span>
 
     @Override
     public void close() throws IOException {
-<span class="fc" id="L447">        logEnricher.close();</span>
-<span class="fc" id="L448">    }</span>
+<span class="fc" id="L469">        logEnricher.close();</span>
+<span class="fc" id="L470">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
