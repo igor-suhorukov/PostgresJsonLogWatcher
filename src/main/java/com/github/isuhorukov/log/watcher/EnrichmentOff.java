@@ -39,5 +39,6 @@ public class EnrichmentOff implements LogEnricher{
      */
     @Override
     public void close() throws IOException {
+        //nothing to close in this implementation
     }
 }

@@ -249,36 +249,6 @@
                     </execution>
                 </executions>
             </plugin>
-<!--
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
-                <version>3.7.1</version>
-                <executions>
-                    <execution>
-                        <id>copy</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <artifactItems>
-                        <artifactItem>
-                            <groupId>com.github.igor-suhorukov</groupId>
-                            <artifactId>mvn-appmap-cli</artifactId>
-                            <version>3.159.0</version>
-                            <type>bin</type>
-                            <classifier>linux64</classifier>
-                            <overWrite>false</overWrite>
-                            <outputDirectory>${basedir}</outputDirectory>
-                            <destFileName>appmap-linux-x64</destFileName>
-                        </artifactItem>
-                    </artifactItems>
-                </configuration>
-            </plugin>
--->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
