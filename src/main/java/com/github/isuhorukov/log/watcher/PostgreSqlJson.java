@@ -26,6 +26,13 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
  * The {@code PostgreSqlJson} class is a command-line tool for reading
  * PostgreSQL DBMS logs in JSON format and sending them to an OpenTelemetry collector.
  * It can optionally use a {@link LogEnricher} to add additional data to the logs.
+ *
+ * @plantUml
+ * database "PostgreSQL 15+"
+ * node postgres_log_parser #palegreen
+ * node "OpenTelemetry collector"
+ * postgres_log_parser - "PostgreSQL 15+" : watch changes and parse JSON logs
+ * postgres_log_parser -(0- "OpenTelemetry collector": sending the logs
  */
 @CommandLine.Command(mixinStandardHelpOptions = true, versionProvider = VersionProvider.class,
         name = "postgres_log_parser",
@@ -141,6 +148,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                         continue;
                     }
                     readJsonLog(new File(watchDir, fileName));
+                    Thread.yield();
                 }
                 key.reset();
             }
