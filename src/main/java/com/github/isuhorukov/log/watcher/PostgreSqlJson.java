@@ -239,23 +239,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     void parseLogLine(String line, String logName){
         JsonNode jsonNode = mapper.readTree(line);
         Level severity = getSeverity(jsonNode.at("/error_severity").asText());
-        switch (severity){
-            case TRACE:
-                if(!logger.isTraceEnabled()) return;
-                break;
-            case DEBUG:
-                if(!logger.isDebugEnabled()) return;
-                break;
-            case INFO:
-                if(!logger.isInfoEnabled()) return;
-                break;
-            case WARN:
-                if(!logger.isWarnEnabled()) return;
-                break;
-            case ERROR:
-                if(!logger.isErrorEnabled()) return;
-                break;
-        }
+        if (skipProcessing(severity)) return;
 
         Iterator<Map.Entry<String, JsonNode>> fields = jsonNode.fields();
 
@@ -263,24 +247,9 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         if(logEnricher.enricherApplicationName()!=null && message.contains(logEnricher.enricherApplicationName())){
             return;
         }
-
         LoggingEventBuilder loggingEventBuilder = logger.atLevel(severity);
         if(message.startsWith(DURATION)){
-            int msEndIndex = message.indexOf(MS);
-            double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));
-            loggingEventBuilder = loggingEventBuilder.addKeyValue("duration", duration);
-            int planIdx = message.indexOf(PLAN);
-            if(planIdx!=-1){
-                String plan = message.substring(planIdx + PLAN.length());
-                loggingEventBuilder = loggingEventBuilder.addKeyValue("plan", plan);
-            } else
-            if(message.indexOf(" parse ",msEndIndex+2)>-1){
-                loggingEventBuilder = loggingEventBuilder.addKeyValue("parse", true);
-            } else
-            if(message.indexOf(" bind ",msEndIndex+2)>-1){
-                loggingEventBuilder = loggingEventBuilder.addKeyValue("bind", true);
-            }
-            loggingEventBuilder = loggingEventBuilder.setMessage("");
+            loggingEventBuilder = parseDuration(message, loggingEventBuilder);
         } else {
             loggingEventBuilder = loggingEventBuilder.setMessage(message);
             if(message.startsWith("statement: ")){
@@ -290,6 +259,35 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                 loggingEventBuilder = loggingEventBuilder.addKeyValue("execute", true);
             }
         }
+        loggingEventBuilder = processLogRecordAttributes(fields, loggingEventBuilder);
+        if (loggingEventBuilder == null) return; //skip enricher log record by clientName
+        loggingEventBuilder = loggingEventBuilder.addKeyValue("fileName", logName);
+        loggingEventBuilder.log();
+    }
+
+    private boolean skipProcessing(Level severity) {
+        switch (severity){
+            case TRACE:
+                if(!logger.isTraceEnabled()) return true;
+                break;
+            case DEBUG:
+                if(!logger.isDebugEnabled()) return true;
+                break;
+            case INFO:
+                if(!logger.isInfoEnabled()) return true;
+                break;
+            case WARN:
+                if(!logger.isWarnEnabled()) return true;
+                break;
+            case ERROR:
+                if(!logger.isErrorEnabled()) return true;
+                break;
+        }
+        return false;
+    }
+
+    private LoggingEventBuilder processLogRecordAttributes(Iterator<Map.Entry<String, JsonNode>> fields,
+                                                           LoggingEventBuilder loggingEventBuilder) {
         while (fields.hasNext()) {
             Map.Entry<String, JsonNode> entry = fields.next();
             String key = entry.getKey();
@@ -300,20 +298,42 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                 continue;
             }
             if("application_name".equals(key) && value.equals(logEnricher.enricherApplicationName())){
-                return; //skip enricher log record by clientName
+                return null;
             }
             if(QUERY_ID.equals(key)){
-                String queryId = value;
-                String statement = logEnricher.getStatement(queryId);
-                if(statement!=null && !statement.isEmpty()){
-                    loggingEventBuilder = loggingEventBuilder.addKeyValue("statement_text", statement);
-                }
+                loggingEventBuilder = enrichWithStatementText(value, loggingEventBuilder);
             }
             JsonNode entryValue = entry.getValue();
             loggingEventBuilder = loggingEventBuilder.addKeyValue(key, getValue(entryValue));
         }
-        loggingEventBuilder = loggingEventBuilder.addKeyValue("fileName", logName);
-        loggingEventBuilder.log();
+        return loggingEventBuilder;
+    }
+
+    private LoggingEventBuilder enrichWithStatementText(String queryId, LoggingEventBuilder loggingEventBuilder) {
+        String statement = logEnricher.getStatement(queryId);
+        if(statement!=null && !statement.isEmpty()){
+            loggingEventBuilder = loggingEventBuilder.addKeyValue("statement_text", statement);
+        }
+        return loggingEventBuilder;
+    }
+
+    private LoggingEventBuilder parseDuration(String message, LoggingEventBuilder loggingEventBuilder) {
+        int msEndIndex = message.indexOf(MS);
+        double duration = Double.parseDouble(message.substring(DURATION.length(), msEndIndex));
+        loggingEventBuilder = loggingEventBuilder.addKeyValue("duration", duration);
+        int planIdx = message.indexOf(PLAN);
+        if(planIdx!=-1){
+            String plan = message.substring(planIdx + PLAN.length());
+            loggingEventBuilder = loggingEventBuilder.addKeyValue("plan", plan);
+        } else
+        if(message.indexOf(" parse ",msEndIndex+2)>-1){
+            loggingEventBuilder = loggingEventBuilder.addKeyValue("parse", true);
+        } else
+        if(message.indexOf(" bind ",msEndIndex+2)>-1){
+            loggingEventBuilder = loggingEventBuilder.addKeyValue("bind", true);
+        }
+        loggingEventBuilder = loggingEventBuilder.setMessage("");
+        return loggingEventBuilder;
     }
 
     private static Object getValue(JsonNode entryValue) {
@@ -324,6 +344,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
                         return entryValue.asInt();
                     case LONG:
                         return entryValue.asLong();
+                    default:
+                        return entryValue.asText();
                 }
             case STRING:
             default:
