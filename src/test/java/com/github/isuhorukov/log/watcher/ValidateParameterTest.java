@@ -13,17 +13,17 @@ import java.util.UUID;
 import static de.dm.infrastructure.logcapture.LogExpectation.error;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class ValidateParameterTest {
+class ValidateParameterTest {
 
     @RegisterExtension
-    public LogCapture logCapture = LogCapture.forPackages("cli");
+    LogCapture logCapture = LogCapture.forPackages("cli");
 
     /**
      * @plantUml
      */
     @Test
     @SneakyThrows
-    public void missingWatchDir() {
+    void missingWatchDir() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             assertEquals(1, postgreSqlJson.call());
         }
@@ -35,13 +35,13 @@ public class ValidateParameterTest {
      */
     @Test
     @SneakyThrows
-    public void nonExistingWatchDir() {
+    void nonExistingWatchDir() {
         String watchDir = UUID.randomUUID().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
             assertEquals(1, postgreSqlJson.call());
         }
-        logCapture.assertLogged(error("PostgreSQL directory '"+watchDir+"' with JSON logs not exist"));
+        logCapture.assertLogged(error("PostgreSQL directory '" + watchDir + "' with JSON logs not exist"));
     }
 
     /**
@@ -49,13 +49,13 @@ public class ValidateParameterTest {
      */
     @Test
     @SneakyThrows
-    public void nonDirectoryWatchDir(@TempDir Path tempDir) {
+    void nonDirectoryWatchDir(@TempDir Path tempDir) {
         String watchDir = Files.createFile(tempDir.resolve("tempfile.txt")).toAbsolutePath().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
             assertEquals(1, postgreSqlJson.call());
         }
-        logCapture.assertLogged(error("Path '"+watchDir+"' is not directory"));
+        logCapture.assertLogged(error("Path '" + watchDir + "' is not directory"));
     }
 
     /**
@@ -63,7 +63,7 @@ public class ValidateParameterTest {
      */
     @Test
     @SneakyThrows
-    public void intervalOutOfRange(@TempDir Path tempDir) {
+    void intervalOutOfRange(@TempDir Path tempDir) {
         String watchDir = tempDir.toAbsolutePath().toString();
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.setWatchDir(watchDir);
@@ -72,7 +72,8 @@ public class ValidateParameterTest {
             logCapture.assertLogged(error("saveInterval must be between 1 and 1000 sec. Actual value 0"));
             postgreSqlJson.setSaveInterval(Long.MAX_VALUE);
             assertEquals(1, postgreSqlJson.call());
-            logCapture.assertLogged(error("saveInterval must be between 1 and 1000 sec. Actual value "+Long.MAX_VALUE));
+            logCapture.assertLogged(error("saveInterval must be between 1 and 1000 sec. Actual value " +
+                                                    Long.MAX_VALUE));
         }
     }
 }

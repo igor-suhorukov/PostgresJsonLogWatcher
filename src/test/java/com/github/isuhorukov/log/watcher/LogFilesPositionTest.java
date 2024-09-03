@@ -15,20 +15,20 @@ import java.nio.file.StandardOpenOption;
 import static de.dm.infrastructure.logcapture.ExpectedException.exception;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class LogFilesPositionTest {
+class LogFilesPositionTest {
 
     @RegisterExtension
-    public LogCapture logCapture = LogCapture.forPackages("cli");
+    LogCapture logCapture = LogCapture.forPackages("cli");
 
     /**
      * @plantUml
      */
     @Test
     @SneakyThrows
-    public void savePositionToInvalidPath(@TempDir Path tempDir) {
-        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+    void savePositionToInvalidPath(@TempDir Path tempDir) {
+        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.currentLogPositionFile = tempDir.toFile().getAbsolutePath();
-            postgreSqlJson.position.put("abc.json",Long.MAX_VALUE);
+            postgreSqlJson.position.put("abc.json", Long.MAX_VALUE);
             postgreSqlJson.saveLogFilesPosition();
             logCapture.assertLogged(LogExpectation.error("Unable to save current log position",
                     exception().expectedMessageRegex("Is a directory").build()));
@@ -40,18 +40,18 @@ public class LogFilesPositionTest {
      */
     @Test
     @SneakyThrows
-    public void positionFileTasks(@TempDir Path tempDir) {
+    void positionFileTasks(@TempDir Path tempDir) {
         Path positionFile = Files.createFile(tempDir.resolve("pos_file"));
         Files.write(positionFile, "{\"postgresql-2024-08-01_065552.json\":136172}".
                 getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);
 
-        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
+        try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.saveInterval = 1;
             postgreSqlJson.currentLogPositionFile = positionFile.toFile().getAbsolutePath();
             Thread thread = postgreSqlJson.positionFileTasks();
             Thread.sleep(1100);
             Runtime.getRuntime().removeShutdownHook(thread);
-            assertEquals(136172L,postgreSqlJson.position.get("postgresql-2024-08-01_065552.json"));
+            assertEquals(136172L, postgreSqlJson.position.get("postgresql-2024-08-01_065552.json"));
         }
     }
 }

@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class PostgreSqlJsonContainerIT {
 
     @RegisterExtension
-    public LogCapture logCapture = LogCapture.forCurrentPackage();
+    LogCapture logCapture = LogCapture.forCurrentPackage();
 
     /**
      * Tests the functionality of watching PostgreSQL logs using a Docker container.
@@ -42,16 +42,15 @@ public class PostgreSqlJsonContainerIT {
      * </p>
      *
      * @param tempDir a temporary directory provided by JUnit for test file storage.
-     *
      * @plantUml
      */
     @Test
     @SneakyThrows
-    public void testWatchPostgreSqlLogsWithContainer(@TempDir Path tempDir) {
+    void testWatchPostgreSqlLogsWithContainer(@TempDir Path tempDir) {
 
         Path pgData = createPgDataDirectory(tempDir);
-        log.info("PostgreSQL data directory for test {}",pgData);
-        try(PostgreSQLContainer<?> postgresContainer = configurePostgresContainer(pgData)){
+        log.info("PostgreSQL data directory for test {}", pgData);
+        try (PostgreSQLContainer<?> postgresContainer = configurePostgresContainer(pgData)) {
             startPostgreSqlContainer(postgresContainer);
 
             applicationProcessLog(postgresContainer, pgData);
@@ -61,7 +60,7 @@ public class PostgreSqlJsonContainerIT {
     }
 
     public static void applicationProcessLog(PostgreSQLContainer<?> postgresContainer, Path pgData)
-                                                        throws SQLException, InterruptedException, IOException {
+            throws SQLException, InterruptedException, IOException {
 
         PostgreSqlJson postgreSqlJson = getPostgreSqlJson(postgresContainer, pgData);
 
@@ -115,7 +114,7 @@ public class PostgreSqlJsonContainerIT {
     @NotNull
     static Future<Integer> startLogWatcher(ExecutorService executorService, PostgreSqlJson postgreSqlJson) {
         Future<Integer> resultCode = executorService.submit(postgreSqlJson::watchPostgreSqlLogs);
-        while (postgreSqlJson.getFsWatchService()==null){
+        while (postgreSqlJson.getFsWatchService() == null) {
             Thread.yield();
         }
         return resultCode;
@@ -136,7 +135,7 @@ public class PostgreSqlJsonContainerIT {
         postgreSqlJson.setPosgreSqlUserName(postgresContainer.getUsername());
         postgreSqlJson.setPosgreSqlPassword(postgresContainer.getPassword());
         postgreSqlJson.setSaveInterval(10);
-        Path posFile = Files.createTempFile("test","pos_file");
+        Path posFile = Files.createTempFile("test", "pos_file");
         postgreSqlJson.setCurrentLogPositionFile(posFile.toString());
         postgreSqlJson.setWatchDir(pgData.resolve("log").toString());
         return postgreSqlJson;
@@ -146,13 +145,13 @@ public class PostgreSqlJsonContainerIT {
         try (Connection connection = postgresContainer.createConnection("");
              Statement statement = connection.createStatement();
              PreparedStatement preparedStatement = connection.prepareStatement(
-                     "SELECT * from generate_series(1, 100) g where g=?")){
+                     "SELECT * from generate_series(1, 100) g where g=?")) {
             statement.executeQuery("select version()");
-            for(int idx=0;idx<10;idx++){
-                preparedStatement.setInt(1,idx*5);
-                try (ResultSet resultSet = preparedStatement.executeQuery()){
-                    while (resultSet.next()){
-                        assertEquals(idx*5, resultSet.getInt(1));
+            for (int idx = 0; idx < 10; idx++) {
+                preparedStatement.setInt(1, idx * 5);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    while (resultSet.next()) {
+                        assertEquals(idx * 5, resultSet.getInt(1));
                     }
                 }
             }

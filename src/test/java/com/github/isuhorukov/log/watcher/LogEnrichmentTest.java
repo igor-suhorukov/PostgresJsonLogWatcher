@@ -17,19 +17,19 @@ import static de.dm.infrastructure.logcapture.LogExpectation.error;
 import static de.dm.infrastructure.logcapture.LogExpectation.info;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class LogEnrichmentTest {
+class LogEnrichmentTest {
 
     @RegisterExtension
-    public LogCapture logCapture = LogCapture.forPackages("cli");
+    LogCapture logCapture = LogCapture.forPackages("cli");
     @RegisterExtension
-    public LogCapture pgLogCapture = LogCapture.forCurrentPackage();
+    LogCapture pgLogCapture = LogCapture.forCurrentPackage();
 
     /**
      * @plantUml
      */
     @Test
     @SneakyThrows
-    public void defaultEnrichmentOff() {
+    void defaultEnrichmentOff() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             assertNotNull(postgreSqlJson.logEnricher);
             assertEquals("EnrichmentOff", postgreSqlJson.logEnricher.getClass().getSimpleName());
@@ -41,7 +41,7 @@ public class LogEnrichmentTest {
      */
     @Test
     @SneakyThrows
-    public void initLogEnricherWoDbHost(){
+    void initLogEnricherWoDbHost() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.logEnricher = null;
             postgreSqlJson.initLogEnricher();
@@ -55,7 +55,7 @@ public class LogEnrichmentTest {
      */
     @Test
     @SneakyThrows
-    public void initLogEnricherWithDbHostWoConnection(){
+    void initLogEnricherWithDbHostWoConnection() {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             postgreSqlJson.logEnricher = null;
             postgreSqlJson.setPosgreSqlHost("127.0.0.1");
@@ -64,7 +64,7 @@ public class LogEnrichmentTest {
             assertNotNull(postgreSqlJson.logEnricher);
             assertEquals("EnrichmentOff", postgreSqlJson.logEnricher.getClass().getSimpleName());
             logCapture.assertLogged(error("Failed to use log enricher " +
-                    LogEnricherPostgreSql.class.getSimpleName()+" for postgres, " +
+                    LogEnricherPostgreSql.class.getSimpleName() + " for postgres, " +
                     "so I work in mode without log enrichment"));
 
         }
@@ -75,9 +75,9 @@ public class LogEnrichmentTest {
      */
     @Test
     @SneakyThrows
-    public void initLogEnricherWithDbHostWoPgStatStatement(){
+    void initLogEnricherWithDbHostWoPgStatStatement() {
         Server server = Server.createPgServer("-pgPort", "7432",
-                "-ifNotExists","-pgAllowOthers" ,"-key", "postgres", "mem:postgres");
+                "-ifNotExists", "-pgAllowOthers", "-key", "postgres", "mem:postgres");
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             server.start();
             postgreSqlJson.logEnricher = null;
@@ -102,18 +102,18 @@ public class LogEnrichmentTest {
     @Test
     @SneakyThrows
     @DisplayName("Test LogEnricher with emulated PostgreSQL database with pg_stat_statements extension")
-    public void initLogEnricherWithDbHostWithPgStatStatement(){
+    void initLogEnricherWithDbHostWithPgStatStatement() {
         String passwordForTest = UUID.randomUUID().toString();
 
         Server server = Server.createPgServer("-pgPort", "7432",
-                "-ifNotExists","-pgAllowOthers" ,"-key", "postgres", "mem:postgres");
+                "-ifNotExists", "-pgAllowOthers", "-key", "postgres", "mem:postgres");
 
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()) {
             server.start();
             try (Connection connection = DriverManager.getConnection(
                     "jdbc:postgresql://127.0.0.1:7432/postgres?ApplicationName=log_watcher_enricher",
-                    "postgres",passwordForTest);
-                 Statement statement = connection.createStatement()){
+                    "postgres", passwordForTest);
+                 Statement statement = connection.createStatement()) {
 
                 statement.executeUpdate("CREATE TABLE pg_stat_statements(queryid bigint, query text) /* emulate pg_stat_statements */");
 
@@ -146,13 +146,13 @@ public class LogEnrichmentTest {
                                 "/* emulate pg_stat_statements */");
                 postgreSqlJson.parseLogLine(
                         "{\"timestamp\":\"2024-08-01 06:58:01.088 UTC\",\"user\":\"postgres\"," +
-                        "\"dbname\":\"osmworld\",\"pid\":162,\"remote_host\":\"172.17.0.1\",\"remote_port\":60944," +
-                        "\"session_id\":\"66ab31f2.a2\",\"line_num\":5,\"ps\":\"SELECT\"," +
-                        "\"session_start\":\"2024-08-01 06:57:54 UTC\",\"vxid\":\"3/137\",\"txid\":0," +
-                        "\"error_severity\":\"LOG\",\"message\":\"duration: 5005.154 ms  plan:" +
-                        "\\nQuery Text: SELECT pg_sleep(5);\\nResult  (cost=0.00..0.01 rows=1 width=4)\"," +
-                        "\"application_name\":\"psql\",\"backend_type\":\"client backend\"," +
-                        "\"query_id\":-3416356442043621232}","postgresql-2024-08-01_065557.json");
+                                "\"dbname\":\"osmworld\",\"pid\":162,\"remote_host\":\"172.17.0.1\",\"remote_port\":60944," +
+                                "\"session_id\":\"66ab31f2.a2\",\"line_num\":5,\"ps\":\"SELECT\"," +
+                                "\"session_start\":\"2024-08-01 06:57:54 UTC\",\"vxid\":\"3/137\",\"txid\":0," +
+                                "\"error_severity\":\"LOG\",\"message\":\"duration: 5005.154 ms  plan:" +
+                                "\\nQuery Text: SELECT pg_sleep(5);\\nResult  (cost=0.00..0.01 rows=1 width=4)\"," +
+                                "\"application_name\":\"psql\",\"backend_type\":\"client backend\"," +
+                                "\"query_id\":-3416356442043621232}", "postgresql-2024-08-01_065557.json");
                 pgLogCapture.assertLogged(info(keyValue("statement_text", "SELECT pg_sleep($1)")));
             }
         } finally {

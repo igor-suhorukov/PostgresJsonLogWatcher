@@ -331,6 +331,7 @@
                         <artifactId>PlantUmlJavadocTaglet</artifactId>
                         <version>0.1.2</version>
                     </tagletArtifact>
+                    <show>package</show>
                 </configuration>
             </plugin>
             <plugin>
@@ -399,6 +400,7 @@
                         <artifactId>PlantUmlJavadocTaglet</artifactId>
                         <version>0.1.2</version>
                     </tagletArtifact>
+                    <show>package</show>
                 </configuration>
             </plugin>
             <plugin>

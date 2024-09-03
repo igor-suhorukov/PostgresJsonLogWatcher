@@ -23,12 +23,12 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class WatchServiceTest {
+class WatchServiceTest {
     @Mock
     private WatchService watchService;
     @RegisterExtension
-    public LogCapture logCapture = LogCapture.forCurrentPackage();
-    private final PostgreSqlJson postgreSqlJson = new PostgreSqlJson(){
+    LogCapture logCapture = LogCapture.forCurrentPackage();
+    private final PostgreSqlJson postgreSqlJson = new PostgreSqlJson() {
         @Override
         protected Thread positionFileTasks() throws IOException {
             //do nothing in this test
@@ -56,7 +56,7 @@ public class WatchServiceTest {
      */
     @Test
     @SneakyThrows
-    public void testWatchService(@TempDir Path tempDir) {
+    void testWatchService(@TempDir Path tempDir) {
         Path jsonLog = Files.createFile(tempDir.resolve("postgresql-2024-08-04_072905.json"));
         Files.write(jsonLog, ("{\"timestamp\":\"2024-08-01 06:55:52.123 UTC\",\"pid\":50," +
                 "\"session_id\":\"66ab3178.32\",\"line_num\":4,\"session_start\":\"2024-08-01 06:55:52 UTC\"," +
@@ -69,7 +69,7 @@ public class WatchServiceTest {
         WatchEvent<Path> watchEvent = mock(WatchEvent.class);
         when(watchKey.pollEvents()).thenReturn(Collections.singletonList(watchEvent));
         when(watchEvent.context()).thenReturn(jsonLog.getFileName());
-        long saveInterval= 1;
+        long saveInterval = 1;
         String watchDir = tempDir.toString();
         postgreSqlJson.setWatchDir(watchDir);
         postgreSqlJson.setSaveInterval(saveInterval);
@@ -86,7 +86,7 @@ public class WatchServiceTest {
      */
     @Test
     @SneakyThrows
-    public void testWatchServiceSkipNonJson(@TempDir Path tempDir) {
+    void testWatchServiceSkipNonJson(@TempDir Path tempDir) {
         Path jsonLog = Files.createFile(tempDir.resolve("postgresql-2024-08-04_072905.log"));
         Files.write(jsonLog, "".getBytes(StandardCharsets.UTF_8), StandardOpenOption.WRITE);
         doNothing().when(watchService).close();
@@ -95,7 +95,7 @@ public class WatchServiceTest {
         WatchEvent<Path> watchEvent = mock(WatchEvent.class);
         when(watchKey.pollEvents()).thenReturn(Collections.singletonList(watchEvent));
         when(watchEvent.context()).thenReturn(jsonLog.getFileName());
-        long saveInterval= 1;
+        long saveInterval = 1;
         String watchDir = tempDir.toString();
         postgreSqlJson.setWatchDir(watchDir);
         postgreSqlJson.setSaveInterval(saveInterval);
@@ -107,12 +107,12 @@ public class WatchServiceTest {
      * @plantUml
      */
     @Test
-    public void testRegisterWatchEvent() throws IOException {
-        try(PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
-            WatchService watchService = mock(WatchService.class);
+    void testRegisterWatchEvent() throws IOException {
+        try (PostgreSqlJson postgresLogWatcher = new PostgreSqlJson()) {
+            WatchService watcher = mock(WatchService.class);
             Path dirToWatch = mock(Path.class);
-            postgreSqlJson.registerWatchEvent(dirToWatch, watchService);
-            verify(dirToWatch).register(eq(watchService), eq(ENTRY_CREATE), eq(ENTRY_MODIFY));
+            postgresLogWatcher.registerWatchEvent(dirToWatch, watcher);
+            verify(dirToWatch).register(watcher, ENTRY_CREATE, ENTRY_MODIFY);
         }
     }
 
@@ -121,10 +121,10 @@ public class WatchServiceTest {
      */
     @Test
     @SneakyThrows
-    public void testWatchService() {
-        try(PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
-            WatchService watchService = postgreSqlJson.getWatchService();
-            assertNotNull(watchService);
+    void testWatchService() {
+        try (PostgreSqlJson postgresLogWatcher = new PostgreSqlJson()) {
+            WatchService watcher = postgresLogWatcher.getWatchService();
+            assertNotNull(watcher);
         }
     }
 }
