@@ -1,6 +1,8 @@
 package com.github.isuhorukov.log.watcher;
 
 import de.dm.infrastructure.logcapture.LogCapture;
+import io.qameta.allure.Description;
+import io.qameta.allure.Step;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -46,6 +48,7 @@ public class PostgreSqlJsonContainerIT {
      */
     @Test
     @SneakyThrows
+    @Description("Tests the functionality of watching PostgreSQL logs using a Docker container")
     void testWatchPostgreSqlLogsWithContainer(@TempDir Path tempDir) {
 
         Path pgData = createPgDataDirectory(tempDir);
@@ -59,6 +62,7 @@ public class PostgreSqlJsonContainerIT {
         }
     }
 
+    @Step("application should detect and process log entries from the PostgreSQL logs")
     public static void applicationProcessLog(PostgreSQLContainer<?> postgresContainer, Path pgData)
             throws SQLException, InterruptedException, IOException {
 
@@ -73,10 +77,12 @@ public class PostgreSqlJsonContainerIT {
         shutdownExecutor(executorService);
     }
 
+    @Step("a temporary directory for Postgres data and log files")
     public static Path createPgDataDirectory(Path tempDir) throws IOException {
         return Files.createDirectory(tempDir.resolve("pg_data"));
     }
 
+    @Step("configure PostgreSQL container")
     public static PostgreSQLContainer<?> configurePostgresContainer(Path pgData) {
         return new PostgreSQLContainer<>("postgres:16")
                 .withCommand(
@@ -120,6 +126,7 @@ public class PostgreSqlJsonContainerIT {
         return resultCode;
     }
 
+    @Step("I start the PostgreSQL container with specific logging configurations")
     public static void startPostgreSqlContainer(PostgreSQLContainer<?> postgresContainer) throws InterruptedException, IOException {
         postgresContainer.start();
         Thread.sleep(TimeUnit.SECONDS.toMillis(2));
@@ -158,6 +165,7 @@ public class PostgreSqlJsonContainerIT {
         }
     }
 
+    @Step("logs are generated in the specified directory and watched & processed by postgres_log_parser")
     public static void assertExpectedLogEvents(LogCapture logCapture1) {
         logCapture1.assertLogged(info("starting PostgreSQL"));
         logCapture1.assertLogged(info("database system is ready to accept connections"));

@@ -34,6 +34,7 @@
         <allure.version>2.29.0</allure.version>
         <junit-platform.version>1.11.0</junit-platform.version>
         <allure-maven.version>2.13.0</allure-maven.version>
+        <aspectj.version>1.9.22.1</aspectj.version>
     </properties>
 
     <dependencies>
@@ -174,12 +175,18 @@
                     </includes>
                     <classesDirectory>${project.build.outputDirectory}</classesDirectory>
                     <testClassesDirectory>${build.testOutputDirectory}</testClassesDirectory>
+                    <argLine>@{argLine} -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
                         <groupId>org.junit.platform</groupId>
                         <artifactId>junit-platform-launcher</artifactId>
                         <version>1.11.0</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.aspectj</groupId>
+                        <artifactId>aspectjweaver</artifactId>
+                        <version>${aspectj.version}</version>
                     </dependency>
                 </dependencies>
                 <executions>
