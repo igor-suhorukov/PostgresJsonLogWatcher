@@ -1,34 +1,34 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant PostgreSqlJson_2 as "PostgreSqlJson$2"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant WatchServiceTest as "WatchServiceTest"
 participant WatchServiceTest_1 as "WatchServiceTest$1"
-  [->PostgreSqlJson_2: run <color:gray> 0.236 ms</color>
+  [->PostgreSqlJson_2: run <color:gray> 0.267 ms</color>
   activate PostgreSqlJson_2
-    PostgreSqlJson_2->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.178 ms</color>
+    PostgreSqlJson_2->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.212 ms</color>
     activate PostgreSqlJson
     PostgreSqlJson_2<--PostgreSqlJson: void
     deactivate PostgreSqlJson
   [<--PostgreSqlJson_2: void
   deactivate PostgreSqlJson_2
-  [->WatchServiceTest: testWatchServiceSkipNonJson <color:gray> 29.3 ms</color>
+  [->WatchServiceTest: testWatchServiceSkipNonJson <color:gray> 22.9 ms</color>
   activate WatchServiceTest
-    WatchServiceTest->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.899 ms</color>
+    WatchServiceTest->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.737 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 0.0448 ms</color>
+      PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 0.0204 ms</color>
       activate PostgreSqlJson
       PostgreSqlJson<--PostgreSqlJson: void
       deactivate PostgreSqlJson
-      PostgreSqlJson->WatchServiceTest_1: positionFileTasks <color:gray> 0.0257 ms</color>
+      PostgreSqlJson->WatchServiceTest_1: positionFileTasks <color:gray> 0.0162 ms</color>
       activate WatchServiceTest_1
       PostgreSqlJson<--WatchServiceTest_1: java.lang.Thread
       deactivate WatchServiceTest_1
-      PostgreSqlJson->WatchServiceTest_1: initialLogImport <color:gray> 0.0237 ms</color>
+      PostgreSqlJson->WatchServiceTest_1: initialLogImport <color:gray> 0.0199 ms</color>
       activate WatchServiceTest_1
       PostgreSqlJson<--WatchServiceTest_1: void
       deactivate WatchServiceTest_1
-      PostgreSqlJson->WatchServiceTest_1: registerWatchEvent <color:gray> 0.0116 ms</color>
+      PostgreSqlJson->WatchServiceTest_1: registerWatchEvent <color:gray> 0.0117 ms</color>
       activate WatchServiceTest_1
       PostgreSqlJson<--WatchServiceTest_1: void
       deactivate WatchServiceTest_1

@@ -1,13 +1,13 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant PostgreSqlJsonTest as "PostgreSqlJsonTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->PostgreSqlJsonTest: logUnknowSeverity <color:gray> 0.109 ms</color>
+  [->PostgreSqlJsonTest: logUnknowSeverity <color:gray> 0.242 ms</color>
   activate PostgreSqlJsonTest
-    PostgreSqlJsonTest->PostgreSqlJson: parseLogLine <color:gray> 0.0882 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: parseLogLine <color:gray> 0.2 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0181 ms</color>
+      PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0501 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

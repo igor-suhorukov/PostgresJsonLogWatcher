@@ -1,14 +1,14 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant PostgreSqlJsonTest as "PostgreSqlJsonTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->PostgreSqlJsonTest: logError <color:gray> 0.305 ms</color>
+  [->PostgreSqlJsonTest: logError <color:gray> 0.375 ms</color>
   activate PostgreSqlJsonTest
-    PostgreSqlJsonTest->PostgreSqlJson: parseLogLine <color:gray> 0.274 ms</color>
+    PostgreSqlJsonTest->PostgreSqlJson: parseLogLine <color:gray> 0.341 ms</color>
     activate PostgreSqlJson
-      Loop 2 times <color:gray> 0.148 ms</color>
-        PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.148 ms</color>
+      Loop 2 times <color:gray> 0.179 ms</color>
+        PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.179 ms</color>
         activate EnrichmentOff
         PostgreSqlJson<--EnrichmentOff: void
         deactivate EnrichmentOff

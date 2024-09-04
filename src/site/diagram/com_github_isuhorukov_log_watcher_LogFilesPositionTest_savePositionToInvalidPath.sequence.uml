@@ -1,17 +1,17 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant LogFilesPositionTest as "LogFilesPositionTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->LogFilesPositionTest: savePositionToInvalidPath <color:gray> 1.72 ms</color>
+  [->LogFilesPositionTest: savePositionToInvalidPath <color:gray> 1.89 ms</color>
   activate LogFilesPositionTest
-    LogFilesPositionTest->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.905 ms</color>
+    LogFilesPositionTest->PostgreSqlJson: saveLogFilesPosition <color:gray> 0.917 ms</color>
     activate PostgreSqlJson
     LogFilesPositionTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    LogFilesPositionTest->PostgreSqlJson: close <color:gray> 0.0528 ms</color>
+    LogFilesPositionTest->PostgreSqlJson: close <color:gray> 0.072 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0176 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0239 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

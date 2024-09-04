@@ -1,21 +1,21 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant ValidateParameterTest as "ValidateParameterTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->ValidateParameterTest: missingWatchDir <color:gray> 0.148 ms</color>
+  [->ValidateParameterTest: missingWatchDir <color:gray> 0.214 ms</color>
   activate ValidateParameterTest
-    ValidateParameterTest->PostgreSqlJson: call <color:gray> 0.083 ms</color>
+    ValidateParameterTest->PostgreSqlJson: call <color:gray> 0.111 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.0358 ms</color>
+      PostgreSqlJson->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.0499 ms</color>
       activate PostgreSqlJson
       PostgreSqlJson<--PostgreSqlJson: java.lang.Integer
       deactivate PostgreSqlJson
     ValidateParameterTest<--PostgreSqlJson: java.lang.Integer
     deactivate PostgreSqlJson
-    ValidateParameterTest->PostgreSqlJson: close <color:gray> 0.0291 ms</color>
+    ValidateParameterTest->PostgreSqlJson: close <color:gray> 0.0496 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.00955 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0148 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

@@ -1,17 +1,17 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant LogEnrichmentTest as "LogEnrichmentTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->LogEnrichmentTest: initLogEnricherWoDbHost <color:gray> 0.255 ms</color>
+  [->LogEnrichmentTest: initLogEnricherWoDbHost <color:gray> 0.282 ms</color>
   activate LogEnrichmentTest
-    LogEnrichmentTest->PostgreSqlJson: initLogEnricher <color:gray> 0.0269 ms</color>
+    LogEnrichmentTest->PostgreSqlJson: initLogEnricher <color:gray> 0.0396 ms</color>
     activate PostgreSqlJson
     LogEnrichmentTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    LogEnrichmentTest->PostgreSqlJson: close <color:gray> 0.0476 ms</color>
+    LogEnrichmentTest->PostgreSqlJson: close <color:gray> 0.0572 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0154 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0208 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

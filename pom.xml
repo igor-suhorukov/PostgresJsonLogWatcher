@@ -322,6 +322,29 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>pre-site</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <replace dir="${project.basedir}/src/site/diagram">
+                                    <include name="*.sequence.uml"/>
+                                    <replacefilter token="!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml" value=""/>
+                                    <!-- align puml diagram style with javadoc style-->
+                                </replace>
+                                <!-- or change main javadoc theme with https://github.com/dracula/javadoc-->
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <configuration>
                     <taglet>org.jdrupes.taglets.plantUml.PlantUml</taglet>

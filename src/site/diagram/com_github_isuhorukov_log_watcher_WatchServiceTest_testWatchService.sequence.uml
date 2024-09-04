@@ -1,34 +1,34 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant WatchServiceTest as "WatchServiceTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant WatchServiceTest_1 as "WatchServiceTest$1"
 participant EnrichmentOff as "EnrichmentOff"
-  [->WatchServiceTest: testWatchService <color:gray> 0.813 ms</color>
+  [->WatchServiceTest: testWatchService <color:gray> 0.873 ms</color>
   activate WatchServiceTest
-    WatchServiceTest->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.517 ms</color>
+    WatchServiceTest->PostgreSqlJson: watchPostgreSqlLogs <color:gray> 0.562 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 0.0183 ms</color>
+      PostgreSqlJson->PostgreSqlJson: initLogEnricher <color:gray> 0.0193 ms</color>
       activate PostgreSqlJson
       PostgreSqlJson<--PostgreSqlJson: void
       deactivate PostgreSqlJson
-      PostgreSqlJson->WatchServiceTest_1: positionFileTasks <color:gray> 0.00971 ms</color>
+      PostgreSqlJson->WatchServiceTest_1: positionFileTasks <color:gray> 0.00999 ms</color>
       activate WatchServiceTest_1
       PostgreSqlJson<--WatchServiceTest_1: java.lang.Thread
       deactivate WatchServiceTest_1
-      PostgreSqlJson->WatchServiceTest_1: initialLogImport <color:gray> 0.0159 ms</color>
+      PostgreSqlJson->WatchServiceTest_1: initialLogImport <color:gray> 0.0149 ms</color>
       activate WatchServiceTest_1
       PostgreSqlJson<--WatchServiceTest_1: void
       deactivate WatchServiceTest_1
-      PostgreSqlJson->WatchServiceTest_1: registerWatchEvent <color:gray> 0.00959 ms</color>
+      PostgreSqlJson->WatchServiceTest_1: registerWatchEvent <color:gray> 0.0143 ms</color>
       activate WatchServiceTest_1
       PostgreSqlJson<--WatchServiceTest_1: void
       deactivate WatchServiceTest_1
-      PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 0.184 ms</color>
+      PostgreSqlJson->PostgreSqlJson: readJsonLog <color:gray> 0.207 ms</color>
       activate PostgreSqlJson
-        PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.122 ms</color>
+        PostgreSqlJson->PostgreSqlJson: parseLogLine <color:gray> 0.139 ms</color>
         activate PostgreSqlJson
-          PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0316 ms</color>
+          PostgreSqlJson->EnrichmentOff: enricherApplicationName <color:gray> 0.0344 ms</color>
           activate EnrichmentOff
           PostgreSqlJson<--EnrichmentOff: void
           deactivate EnrichmentOff

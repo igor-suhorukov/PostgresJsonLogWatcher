@@ -1,17 +1,17 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant WatchServiceTest as "WatchServiceTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
-  [->WatchServiceTest: testRegisterWatchEvent <color:gray> 64.8 ms</color>
+  [->WatchServiceTest: testRegisterWatchEvent <color:gray> 60.2 ms</color>
   activate WatchServiceTest
-    WatchServiceTest->PostgreSqlJson: registerWatchEvent <color:gray> 12.9 ms</color>
+    WatchServiceTest->PostgreSqlJson: registerWatchEvent <color:gray> 10.4 ms</color>
     activate PostgreSqlJson
     WatchServiceTest<--PostgreSqlJson: void
     deactivate PostgreSqlJson
-    WatchServiceTest->PostgreSqlJson: close <color:gray> 0.102 ms</color>
+    WatchServiceTest->PostgreSqlJson: close <color:gray> 0.0883 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0363 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0346 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff

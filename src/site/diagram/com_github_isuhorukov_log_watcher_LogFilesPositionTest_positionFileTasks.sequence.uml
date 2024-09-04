@@ -1,18 +1,18 @@
 @startuml
-!includeurl https://raw.githubusercontent.com/getappmap/plantuml-theme/main/appmap-theme.puml
+
 participant LogFilesPositionTest as "LogFilesPositionTest"
 participant PostgreSqlJson as "PostgreSqlJson"
 participant EnrichmentOff as "EnrichmentOff"
 participant PostgreSqlJson_2 as "PostgreSqlJson$2"
-  [->LogFilesPositionTest: positionFileTasks <color:gray> 119 ms</color>
+  [->LogFilesPositionTest: positionFileTasks <color:gray> 121 ms</color>
   activate LogFilesPositionTest
-    LogFilesPositionTest->PostgreSqlJson: positionFileTasks <color:gray> 8.51 ms</color>
+    LogFilesPositionTest->PostgreSqlJson: positionFileTasks <color:gray> 10.5 ms</color>
     activate PostgreSqlJson
     LogFilesPositionTest<--PostgreSqlJson: java.lang.Thread
     deactivate PostgreSqlJson
-    LogFilesPositionTest->PostgreSqlJson: close <color:gray> 0.067 ms</color>
+    LogFilesPositionTest->PostgreSqlJson: close <color:gray> 0.0806 ms</color>
     activate PostgreSqlJson
-      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0154 ms</color>
+      PostgreSqlJson->EnrichmentOff: close <color:gray> 0.0228 ms</color>
       activate EnrichmentOff
       PostgreSqlJson<--EnrichmentOff: void
       deactivate EnrichmentOff
@@ -20,9 +20,9 @@ participant PostgreSqlJson_2 as "PostgreSqlJson$2"
     deactivate PostgreSqlJson
   [<--LogFilesPositionTest: void
   deactivate LogFilesPositionTest
-  [->PostgreSqlJson_2: run <color:gray> 6.36 ms</color>
+  [->PostgreSqlJson_2: run <color:gray> 2.72 ms</color>
   activate PostgreSqlJson_2
-    PostgreSqlJson_2->PostgreSqlJson: saveLogFilesPosition <color:gray> 6.3 ms</color>
+    PostgreSqlJson_2->PostgreSqlJson: saveLogFilesPosition <color:gray> 2.67 ms</color>
     activate PostgreSqlJson
     PostgreSqlJson_2<--PostgreSqlJson: void
     deactivate PostgreSqlJson
