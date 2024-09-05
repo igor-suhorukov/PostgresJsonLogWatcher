@@ -3,6 +3,7 @@ package com.github.isuhorukov.log.watcher;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -81,7 +82,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
             description = "Path to file to save current processed position in log files. " +
                     "Required write capability for this program")
     String currentLogPositionFile;
-    @Getter
+    @Getter(AccessLevel.PACKAGE)
     private WatchService fsWatchService;
 
     @SneakyThrows

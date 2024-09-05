@@ -35,6 +35,7 @@
         <junit-platform.version>1.11.0</junit-platform.version>
         <allure-maven.version>2.13.0</allure-maven.version>
         <aspectj.version>1.9.22.1</aspectj.version>
+        <opentelemetry.version>2.7.0</opentelemetry.version>
     </properties>
 
     <dependencies>
@@ -143,6 +144,18 @@
             <version>${junit-platform.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.opentelemetry.</groupId>
+            <artifactId>opentelemetry-api</artifactId>
+            <version>1.41.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.aspectj</groupId>
+            <artifactId>aspectjrt</artifactId>
+            <version>${aspectj.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
     <build>
         <finalName>postgres_log_parser</finalName>
@@ -175,7 +188,9 @@
                     </includes>
                     <classesDirectory>${project.build.outputDirectory}</classesDirectory>
                     <testClassesDirectory>${build.testOutputDirectory}</testClassesDirectory>
-                    <argLine>@{argLine} -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"</argLine>
+                    <argLine>@{argLine} -Dotel.resource.attributes=service.name=${artifactId}:${version}-IntegrationTests
+                        -javaagent:"${settings.localRepository}/org/aspectj/aspectjweaver/${aspectj.version}/aspectjweaver-${aspectj.version}.jar"
+                        -javaagent:"${settings.localRepository}/io/opentelemetry/javaagent/opentelemetry-javaagent/${opentelemetry.version}/opentelemetry-javaagent-${opentelemetry.version}.jar"</argLine>
                 </configuration>
                 <dependencies>
                     <dependency>
@@ -187,6 +202,11 @@
                         <groupId>org.aspectj</groupId>
                         <artifactId>aspectjweaver</artifactId>
                         <version>${aspectj.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.opentelemetry.javaagent</groupId>
+                        <artifactId>opentelemetry-javaagent</artifactId>
+                        <version>${opentelemetry.version}</version>
                     </dependency>
                 </dependencies>
                 <executions>
