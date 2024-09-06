@@ -304,7 +304,32 @@
                             <workingDirectory>${appmap.result}/junit</workingDirectory>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>extract-javadoc</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <includeProjectDependencies>true</includeProjectDependencies>
+                            <includePluginDependencies>true</includePluginDependencies>
+                            <mainClass>com.github.igorsuhorukov.javadoc.ExtractJavadocModel</mainClass>
+                            <arguments>
+                                <argument>${project.basedir}/src</argument>
+                                <argument>${project.build.directory}/javadoc.json</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
                 </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.igor-suhorukov</groupId>
+                        <artifactId>extract-javadoc</artifactId>
+                        <version>1.0</version>
+                        <type>jar</type>
+                        <scope>compile</scope>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
