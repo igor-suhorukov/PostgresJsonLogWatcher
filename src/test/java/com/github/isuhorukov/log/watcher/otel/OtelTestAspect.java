@@ -43,6 +43,18 @@ public class OtelTestAspect {
     }
 
 
+    /**
+     * AOP advice for any methods in the project excluding private methods in PostgreSqlJson and
+     * LogEnricherPostgreSql classes, and methods named getFsWatchService and enricherApplicationName.
+     * This advice proceeds with a span created by the proceedWithSpan method, setting the span name
+     * to the signature of the intercepted method. It also sets the span attributes "arg: {parameterName}"
+     * to the value of the corresponding parameter, and "result" to the value returned by the intercepted
+     * method if it is not null.
+     *
+     * @param pjp the ProceedingJoinPoint representing the intercepted method
+     * @return the result of the intercepted method
+     * @throws Throwable if an error occurs during execution
+     */
     @Around("(execution(!private * com.github.isuhorukov.log.watcher.PostgreSqlJson.*(..)) " +
             "|| execution(!private * com.github.isuhorukov.log.watcher.LogEnricherPostgreSql.*(..))) " +
             "&& !execution(* *getFsWatchService(..)) && !execution(* *enricherApplicationName(..))")
@@ -59,6 +71,18 @@ public class OtelTestAspect {
             }
         }, (e) -> {});
     }
+    /**
+     * Around advice for methods annotated with @Test from the anyMethod() pointcut.
+     * This method creates a span using the OpenTelemetry API and proceeds with the join point.
+     * If the method execution is successful, it sets the attribute "junit.test.result" to "SUCCESSFUL"
+     * and the attribute "result" to the result value. If the method execution fails, it sets the
+     * attribute "junit.test.result" to either "ABORTED" or "FAILED" depending on the exception type,
+     * and the attribute "junit.test.result.reason" to the exception message.
+     *
+     * @param  pjp the ProceedingJoinPoint representing the method invocation
+     * @return the result of the method invocation
+     * @throws Throwable if an error occurs during method invocation
+     */
     @Around("anyMethod() && withTestAnnotation()")
     public Object aroundTestAnnotation(ProceedingJoinPoint pjp) throws Throwable {
         final MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
@@ -82,6 +106,14 @@ public class OtelTestAspect {
                 });
     }
 
+    /**
+     * Around advice for methods annotated with @Step from the anyMethod() pointcut.
+     * This method creates a span using the OpenTelemetry API and proceeds with the join point.
+     *
+     * @param  pjp the ProceedingJoinPoint representing the method invocation
+     * @return the result of the method invocation
+     * @throws Throwable if an error occurs during method invocation
+     */
     @Around("anyMethod() && withStepAnnotation()")
     public Object aroundStepAnnotation(ProceedingJoinPoint pjp) throws Throwable {
         final MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
@@ -89,6 +121,16 @@ public class OtelTestAspect {
         return proceedWithSpan(pjp, getSpanName(pjp, getDescriptionText(annotation)), (s)->{}, (e)->{});
     }
 
+    /**
+     * Executes the given join point with a span created using the OpenTelemetry API.
+     *
+     * @param  pjp            the ProceedingJoinPoint representing the method invocation
+     * @param  spanName       the name of the span
+     * @param  successHandler the consumer to handle the success result
+     * @param  errorHandler   the consumer to handle the error result
+     * @return                the result of the method invocation
+     * @throws Throwable      if an error occurs during method invocation
+     */
     private Object proceedWithSpan(ProceedingJoinPoint pjp, String spanName,
                                    Consumer<Map.Entry<Span, Object>> successHandler,
                                    Consumer<Map.Entry<Span, Exception>> errorHandler) throws Throwable {
