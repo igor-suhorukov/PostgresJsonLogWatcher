@@ -49,9 +49,10 @@ public class OtelTestAspect {
     public Object aroundAnyMethodsFromProject(ProceedingJoinPoint pjp) throws Throwable {
         return proceedWithSpan(pjp, pjp.getSignature().toString(), result -> {
             Span span = result.getKey();
+            final String[] parameterNames = ((MethodSignature) pjp.getSignature()).getParameterNames();
             Object[] args = pjp.getArgs();
-            for (int idx = 0; idx < args.length; idx++) {
-                span.setAttribute("arg[" + idx+"]", String.valueOf(args[idx]));
+            for (int i = 0; i < Math.max(parameterNames.length, args.length); i++) {
+                span.setAttribute("arg: "+parameterNames[i], String.valueOf(args[i]));
             }
             if(result.getValue()!=null){
                 span.setAttribute("result", String.valueOf(result.getValue()));

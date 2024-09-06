@@ -88,7 +88,8 @@ public class PostgreSqlJsonContainerIT {
                 .withCommand(
                         "-c", "log_statement=all", "-c", "log_destination=jsonlog", "-c", "logging_collector=on",
                         "-c", "log_statement=all", "-c", "compute_query_id=on", "-c", "log_duration=on",
-                        "-c", "shared_preload_libraries=pg_stat_statements",
+                        "-c", "shared_preload_libraries=pg_stat_statements,auto_explain",
+                        "-c", "auto_explain.log_min_duration=0",
                         "-c", "track_io_timing=true", "-c", "log_min_duration_statement=0", "-c", "log_checkpoints=on",
                         "-c", "log_connections=on", "-c", "log_disconnections=on", "-c", "log_min_messages=DEBUG5")
                 .withDatabaseName("testdb")
