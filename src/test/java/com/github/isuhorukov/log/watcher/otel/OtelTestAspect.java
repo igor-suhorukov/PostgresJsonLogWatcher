@@ -143,6 +143,7 @@ public class OtelTestAspect {
             SourceLocation location = pjp.getStaticPart().getSourceLocation();
             span.setAttribute("srcCodeLine", location.getLine()-1);
             span.setAttribute("srcCodeFile", location.getFileName());
+            span.setAttribute("fqClass", pjp.getSignature().getDeclaringType().getName());
             successHandler.accept(new AbstractMap.SimpleImmutableEntry<>(span, proceed));
             return proceed;
         } catch (Exception ex) {
