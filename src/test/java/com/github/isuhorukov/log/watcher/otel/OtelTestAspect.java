@@ -12,7 +12,9 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.CodeSignature;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.aspectj.lang.reflect.SourceLocation;
 import org.opentest4j.TestAbortedException;
 
 import java.util.AbstractMap;
@@ -61,7 +63,7 @@ public class OtelTestAspect {
     public Object aroundAnyMethodsFromProject(ProceedingJoinPoint pjp) throws Throwable {
         return proceedWithSpan(pjp, pjp.getSignature().toString(), result -> {
             Span span = result.getKey();
-            final String[] parameterNames = ((MethodSignature) pjp.getSignature()).getParameterNames();
+            final String[] parameterNames = ((CodeSignature) pjp.getSignature()).getParameterNames();
             Object[] args = pjp.getArgs();
             for (int i = 0; i < Math.max(parameterNames.length, args.length); i++) {
                 span.setAttribute("arg: "+parameterNames[i], String.valueOf(args[i]));
@@ -69,7 +71,7 @@ public class OtelTestAspect {
             if(result.getValue()!=null){
                 span.setAttribute("result", String.valueOf(result.getValue()));
             }
-        }, (e) -> {});
+        }, e -> {});
     }
     /**
      * Around advice for methods annotated with @Test from the anyMethod() pointcut.
@@ -88,14 +90,14 @@ public class OtelTestAspect {
         final MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
         final Description annotation = methodSignature.getMethod().getAnnotation(Description.class);
         return proceedWithSpan(pjp, getSpanName(pjp, getDescriptionText(annotation)),
-                (result)-> {
+                result -> {
                     Span span = result.getKey();
                     span.setAttribute("junit.test.result", "SUCCESSFUL");
                     if(result.getValue()!=null){
                         span.setAttribute("result", String.valueOf(result.getValue()));
                     }
                 },
-                (e)->{
+                e ->{
                     Span span = e.getKey();
                     if(e.getValue() instanceof TestAbortedException) {
                         span.setAttribute("junit.test.result", "ABORTED");
@@ -118,7 +120,7 @@ public class OtelTestAspect {
     public Object aroundStepAnnotation(ProceedingJoinPoint pjp) throws Throwable {
         final MethodSignature methodSignature = (MethodSignature) pjp.getSignature();
         final Step annotation = methodSignature.getMethod().getAnnotation(Step.class);
-        return proceedWithSpan(pjp, getSpanName(pjp, getDescriptionText(annotation)), (s)->{}, (e)->{});
+        return proceedWithSpan(pjp, getSpanName(pjp, getDescriptionText(annotation)), sucess->{}, error->{});
     }
 
     /**
@@ -138,6 +140,9 @@ public class OtelTestAspect {
         Span span = spanBuilder.setSpanKind(SpanKind.INTERNAL).startSpan();
         try(Scope scope = span.makeCurrent())  {
             Object proceed = pjp.proceed();
+            SourceLocation location = pjp.getStaticPart().getSourceLocation();
+            span.setAttribute("srcCodeLine", location.getLine()-1);
+            span.setAttribute("srcCodeFile", location.getFileName());
             successHandler.accept(new AbstractMap.SimpleImmutableEntry<>(span, proceed));
             return proceed;
         } catch (Exception ex) {
