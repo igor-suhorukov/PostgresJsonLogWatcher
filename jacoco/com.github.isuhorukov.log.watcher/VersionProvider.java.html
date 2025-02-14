@@ -19,13 +19,22 @@ import java.util.Properties;
      *
      * @return an array of strings containing the version information.
      * @throws Exception if there is an error reading the version properties file.
+     * @plantUml
+     * start
+     * :Open InputStream from version.properties;
+     * :Create Properties object;
+     * :Load properties from InputStream;
+     * :Get project.version property;
+     * :Create String array with version;
+     * :Close InputStream;
+     * stop
      */
     @Override
     public String[] getVersion() throws Exception {
-<span class="fc" id="L25">        try (InputStream inputStream = VersionProvider.class.getResourceAsStream(&quot;/version.properties&quot;)) {</span>
-<span class="fc" id="L26">            Properties properties = new Properties();</span>
-<span class="fc" id="L27">            properties.load(inputStream);</span>
-<span class="fc" id="L28">            return new String[]{properties.getProperty(&quot;project.version&quot;)};</span>
+<span class="fc" id="L34">        try (InputStream inputStream = VersionProvider.class.getResourceAsStream(&quot;/version.properties&quot;)) {</span>
+<span class="fc" id="L35">            Properties properties = new Properties();</span>
+<span class="fc" id="L36">            properties.load(inputStream);</span>
+<span class="fc" id="L37">            return new String[]{properties.getProperty(&quot;project.version&quot;)};</span>
         }
     }
 }

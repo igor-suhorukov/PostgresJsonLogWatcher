@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><database name="database" schema="public" type="PostgreSQL - 16.4">
+<?xml version="1.0" encoding="UTF-8"?><database name="database" schema="public" type="PostgreSQL - 16.7">
    <tables>
       <table name="pg_stat_statements" remarks="emulated extension pg_stat_statements" schema="public" type="TABLE">
          <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="userid" nullable="true" remarks="" size="10" type="oid" typeCode="-5"/>
