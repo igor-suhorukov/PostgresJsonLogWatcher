@@ -35,6 +35,7 @@
         <junit-platform.version>1.11.0</junit-platform.version>
         <allure-maven.version>2.13.0</allure-maven.version>
         <aspectj.version>1.9.22.1</aspectj.version>
+        <plantUmlJavadocTaglet.version>0.2</plantUmlJavadocTaglet.version>
     </properties>
 
     <dependencies>
@@ -359,7 +360,7 @@
                     <tagletArtifact>
                         <groupId>com.github.igor-suhorukov</groupId>
                         <artifactId>PlantUmlJavadocTaglet</artifactId>
-                        <version>0.1.2</version>
+                        <version>${plantUmlJavadocTaglet.version}</version>
                     </tagletArtifact>
                     <show>package</show>
                 </configuration>
@@ -428,7 +429,7 @@
                     <tagletArtifact>
                         <groupId>com.github.igor-suhorukov</groupId>
                         <artifactId>PlantUmlJavadocTaglet</artifactId>
-                        <version>0.1.2</version>
+                        <version>${plantUmlJavadocTaglet.version}</version>
                     </tagletArtifact>
                     <show>package</show>
                 </configuration>

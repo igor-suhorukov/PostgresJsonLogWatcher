@@ -55,6 +55,7 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * @param queryId the ID of the query to retrieve
      * @return the SQL query associated with the provided query ID, or {@code null} if the query ID is invalid
      * @plantUml
+     * title Flowchart Diagram for getStatement()
      * start
      * if (queryId is null or empty?) then (yes)
      * :return null;
@@ -69,6 +70,28 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * :return null;
      * endif
      * stop
+     * @plantUml
+     * title Sequence Diagram for getStatement()
+     * actor Developer
+     * participant System
+     * participant Cache
+     *
+     * Developer -> System : getStatement(queryId)
+     * System -> System : is queryId null or empty?
+     * alt queryId is valid
+     *     System -> System : parse queryId to long (queryIdLong)
+     *     System -> Cache : get(queryIdLong, internalGetStatement)
+     *     alt statement found in Cache
+     *         Cache --> System : statement
+     *         System --> Developer : statement
+     *     else statement not found in Cache
+     *         System -> System : internalGetStatement()
+     *         System --> Cache : store statement
+     *         System --> Developer : statement
+     *     end
+     * else queryId is invalid
+     *     System --> Developer : null
+     * end
      */
     @Override
     @SneakyThrows
