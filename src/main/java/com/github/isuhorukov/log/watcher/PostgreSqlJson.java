@@ -85,6 +85,20 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     private WatchService fsWatchService;
 
     @SneakyThrows
+    /**
+     * Main method to execute the application.
+     * Initializes the PostgreSqlJson class, executes the command line arguments, and exits the system if required.
+     *
+     * @param args Command line arguments passed to the application.
+     * @plantUml
+     * start
+     * :Create PostgreSqlJson instance;
+     * :Execute command line arguments;
+     * if (skipProcessExit is false) then (yes)
+     *     :System.exit with exitCode;
+     * endif
+     * stop
+     */
     public static void main(String[] args) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
             int exitCode = new CommandLine(postgreSqlJson).execute(args);
@@ -114,6 +128,36 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      *
      * @throws IOException if an I/O error occurs initializing the watcher or processing the logs.
      * @throws InterruptedException if the watch service is interrupted while waiting for events.
+     * @plantUml start
+     * if (watchDir is null or empty) then (yes)
+     * :log error;
+     * stop
+     * endif
+     * :create File from watchDir;
+     * if (directory not exists) then (yes)
+     * :log error;
+     * stop
+     * endif
+     * if (not a directory) then (yes)
+     * :log error;
+     * stop
+     * endif
+     * if (saveInterval invalid) then (yes)
+     * :log error;
+     * stop
+     * endif
+     * :initialize log enricher;
+     * :setup position file tasks;
+     * :perform initial log import;
+     * :create watch service;
+     * while (watchService active)
+     * :wait for watch events;
+     * if (file ends with .json) then (yes)
+     * :read JSON log;
+     * endif
+     * :reset watch key;
+     * endwhile
+     * stop
      */
     public int watchPostgreSqlLogs() throws IOException, InterruptedException {
         if(watchDir==null || watchDir.trim().isEmpty()){
@@ -166,6 +210,24 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * If the PostgreSQL host is not set or is empty, the method does not initialize the
      * log enricher, logs an error and instantiate EnrichmentOff instead of LogEnricherPostgreSql.
      * </p>
+     *
+     * @plantUml start
+     * if (posgreSqlHost is null or empty) then (yes)
+     * :initialize enrichment off;
+     * else (no)
+     * :create LogEnricherPostgreSql;
+     * if (failed to create LogEnricherPostgreSql) then (yes)
+     * :log error;
+     * :initialize enrichment off;
+     * else (no)
+     * :check extension;
+     * if (extension is not available) then (yes)
+     * :log error;
+     * :initialize enrichment off;
+     * endif
+     * endif
+     * endif
+     * stop
      */
     void initLogEnricher() {
         if(posgreSqlHost !=null && !posgreSqlHost.isEmpty()){
@@ -207,6 +269,15 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      *
      * @param sourceDirectory the directory containing the PostgreSQL JSON log files to be imported.
      * @throws IOException if an I/O error occurs while reading the log files.
+     * @plantUml start
+     * :Get all JSON files from source directory;
+     * if (Are there JSON files?) then (yes)
+     * :Sort files by name;
+     * while (More files to process?)
+     * :Read next JSON log file;
+     * endwhile
+     * endif
+     * stop
      */
     protected void initialLogImport(File sourceDirectory) throws IOException {
         File[] jsonLogs = sourceDirectory.listFiles(pathname -> pathname.getName().endsWith(JSON_SUFFIX));
@@ -235,8 +306,38 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * </p>
      * @param line the log line in JSON format to be parsed.
      * @param logName the name of the log file from which the line was read.
-     */    @SneakyThrows
-    void parseLogLine(String line, String logName){
+     * @plantUml start
+     * :read line as JSON;
+     * :get severity level;
+     * if (severity is not enabled) then (yes)
+     * :return;
+     * endif
+     * :get fields from JSON;
+     * :get message;
+     * if (message contains enricherApplicationName) then (yes)
+     * :return;
+     * endif
+     * :create logging event;
+     * if (message starts with DURATION) then (yes)
+     * :parse duration;
+     * else (no)
+     * :set message in logging event;
+     * if (message starts with "statement: ") then (yes)
+     * :add statement key-value;
+     * elseif (message starts with "execute") then (yes)
+     * :add execute key-value;
+     * endif
+     * endif
+     * :process log record attributes;
+     * if (logging event builder is null) then (yes)
+     * :return;
+     * endif
+     * :add fileName to logging event;
+     * :log event;
+     * stop
+     */
+    @SneakyThrows
+    void parseLogLine(String line, String logName) {
         JsonNode jsonNode = mapper.readTree(line);
         Level severity = getSeverity(jsonNode.at("/error_severity").asText());
         if (skipProcessing(severity)) return;
@@ -397,6 +498,16 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * </p>
      *
      * @throws IOException if an I/O error occurs while managing the log file positions.
+     * @plantUml
+     * start
+     * if (currentPositionFile exists and not empty?) then (yes)
+     * :Read position from file and put into map;
+     * endif
+     * :Schedule periodic position saving task;
+     * :Create shutdown hook thread;
+     * :Add shutdown hook to Runtime;
+     * :Return shutdown hook thread;
+     * stop
      */
     protected Thread positionFileTasks() throws IOException {
         File currentPositionFile = new File(currentLogPositionFile);
@@ -422,6 +533,19 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * resume points after restarts or interruptions. It ensures atomicity and consistency to prevent
      * data loss.
      * </p>
+     *
+     * @plantUml
+     * start
+     * :Check if position is empty?;
+     * if (yes) then (true)
+     * :return;
+     * endif
+     * :Create FileOutputStream for currentLogPositionFile;
+     * :Write new TreeMap(position) to currentPostitionFile using mapper;
+     * if (Exception) then (catch)
+     * :Log error with cliLogger;
+     * endif
+     * stop
      */
     protected synchronized void saveLogFilesPosition() {
         try {
@@ -444,6 +568,25 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      *
      * @param jsonLog the JSON log file to read
      * @throws IOException if an error occurs while reading the log file
+     * @plantUml
+     * start
+     * :Get jsonLogName from jsonLog;
+     * :Compute from position using jsonLogName;
+     * if (jsonLog.length() == 0) then (yes)
+     * :return;
+     * endif
+     * if (jsonLog.length() &lt;= from) then (yes)
+     * :return;
+     * endif
+     * :Open RandomAccessFile randomAccessJson in read mode;
+     * :Seek randomAccessJson to position from;
+     * while (line != null)
+     * :Read line from randomAccessJson;
+     * :parseLogLine(line, jsonLogName);
+     * endwhile
+     * :Update position with jsonLog.length();
+     * :Close randomAccessJson;
+     * stop
      */
     void readJsonLog(File jsonLog) throws IOException {
         String jsonLogName = jsonLog.getName();
