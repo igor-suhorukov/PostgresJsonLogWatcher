@@ -314,12 +314,12 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * :read line as JSON;
      * :get severity level;
      * if (severity is not enabled) then (yes)
-     * :return;
+     * stop
      * endif
      * :get fields from JSON;
      * :get message;
      * if (message contains enricherApplicationName) then (yes)
-     * :return;
+     * stop
      * endif
      * :create logging event;
      * if (message starts with DURATION) then (yes)
@@ -334,7 +334,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * endif
      * :process log record attributes;
      * if (logging event builder is null) then (yes)
-     * :return;
+     * stop
      * endif
      * :add fileName to logging event;
      * :log event;
