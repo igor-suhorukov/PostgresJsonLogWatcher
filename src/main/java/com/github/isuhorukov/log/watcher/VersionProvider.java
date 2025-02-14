@@ -19,6 +19,15 @@ public class VersionProvider implements CommandLine.IVersionProvider {
      *
      * @return an array of strings containing the version information.
      * @throws Exception if there is an error reading the version properties file.
+     * @plantUml
+     * start
+     * :Open InputStream from version.properties;
+     * :Create Properties object;
+     * :Load properties from InputStream;
+     * :Get project.version property;
+     * :Create String array with version;
+     * :Close InputStream;
+     * stop
      */
     @Override
     public String[] getVersion() throws Exception {

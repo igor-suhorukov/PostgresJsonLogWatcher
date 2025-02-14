@@ -31,6 +31,13 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * @param user         the username for accessing the PostgreSQL database
      * @param password     the password for accessing the PostgreSQL database
      * @param maximumSize  the maximum size of the cache for storing recently used SQL queries
+     * @plantUml
+     * start
+     * :Initialize Caffeine cache with maximumSize;
+     * :Build JDBC URL with host, port, database and application name;
+     * :Create database connection;
+     * :Prepare SQL statement for pg_stat_statements query;
+     * stop
      */
     @SneakyThrows
     public LogEnricherPostgreSql(String host, int port, String database, String user, String password, int maximumSize) {
@@ -47,6 +54,21 @@ public class LogEnricherPostgreSql implements LogEnricher {
      *
      * @param queryId the ID of the query to retrieve
      * @return the SQL query associated with the provided query ID, or {@code null} if the query ID is invalid
+     * @plantUml
+     * start
+     * if (queryId is null or empty?) then (yes)
+     * :return null;
+     * stop
+     * endif
+     * :Try parse queryId to long;
+     * if (parsing successful?) then (yes)
+     * :Get statement from cache
+     * or fetch from database;
+     * :return statement;
+     * else (no)
+     * :return null;
+     * endif
+     * stop
      */
     @Override
     @SneakyThrows
@@ -79,6 +101,10 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * Returns the application name associated with this log enricher.
      *
      * @return the application name as a string
+     * @plantUml
+     * start
+     * :Return LOG_WATCHER_ENRICHER constant;
+     * stop
      */
     @Override
     public String enricherApplicationName() {
@@ -92,6 +118,10 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * It ensures that the underlying {@link Connection} is closed properly when this enricher is no longer needed.</p>
      *
      * @throws IOException if an I/O error occurs while closing the database connection.
+     * @plantUml
+     * start
+     * :Close database connection;
+     * stop
      */
     @Override
     @SneakyThrows

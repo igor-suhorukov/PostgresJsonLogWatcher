@@ -128,7 +128,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      *
      * @throws IOException if an I/O error occurs initializing the watcher or processing the logs.
      * @throws InterruptedException if the watch service is interrupted while waiting for events.
-     * @plantUml start
+     * @plantUml
+     * start
      * if (watchDir is null or empty) then (yes)
      * :log error;
      * stop
@@ -211,7 +212,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * log enricher, logs an error and instantiate EnrichmentOff instead of LogEnricherPostgreSql.
      * </p>
      *
-     * @plantUml start
+     * @plantUml
+     * start
      * if (posgreSqlHost is null or empty) then (yes)
      * :initialize enrichment off;
      * else (no)
@@ -269,7 +271,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      *
      * @param sourceDirectory the directory containing the PostgreSQL JSON log files to be imported.
      * @throws IOException if an I/O error occurs while reading the log files.
-     * @plantUml start
+     * @plantUml
+     * start
      * :Get all JSON files from source directory;
      * if (Are there JSON files?) then (yes)
      * :Sort files by name;
@@ -306,7 +309,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * </p>
      * @param line the log line in JSON format to be parsed.
      * @param logName the name of the log file from which the line was read.
-     * @plantUml start
+     * @plantUml
+     * start
      * :read line as JSON;
      * :get severity level;
      * if (severity is not enabled) then (yes)
