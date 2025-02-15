@@ -314,12 +314,12 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      * :read line as JSON;
      * :get severity level;
      * if (severity is not enabled) then (yes)
-     * :return;
+     * stop
      * endif
      * :get fields from JSON;
      * :get message;
      * if (message contains enricherApplicationName) then (yes)
-     * :return;
+     * stop
      * endif
      * :create logging event;
      * if (message starts with DURATION) then (yes)
@@ -334,7 +334,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      * endif
      * :process log record attributes;
      * if (logging event builder is null) then (yes)
-     * :return;
+     * stop
      * endif
      * :add fileName to logging event;
      * :log event;
@@ -542,7 +542,7 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      * start
      * :Check if position is empty?;
      * if (yes) then (true)
-     * :return;
+     * stop
      * endif
      * :Create FileOutputStream for currentLogPositionFile;
      * :Write new TreeMap(position) to currentPostitionFile using mapper;
@@ -577,10 +577,10 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
      * :Get jsonLogName from jsonLog;
      * :Compute from position using jsonLogName;
      * if (jsonLog.length() == 0) then (yes)
-     * :return;
+     * stop
      * endif
      * if (jsonLog.length() &amp;lt;= from) then (yes)
-     * :return;
+     * stop
      * endif
      * :Open RandomAccessFile randomAccessJson in read mode;
      * :Seek randomAccessJson to position from;
