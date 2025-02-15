@@ -40,43 +40,77 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @Setter
 public class PostgreSqlJson implements Callable<Integer>, Closeable {
 
-    public static final String DURATION = "duration: ";
-    public static final String MS = " ms";
-    public static final String PLAN = "plan:\n";
-    public static final String QUERY_ID = "query_id";
-    public static final String JSON_SUFFIX = ".json";
+    private static final String DURATION = "duration: ";
+    private static final String MS = " ms";
+    private static final String PLAN = "plan:\n";
+    private static final String QUERY_ID = "query_id";
+    private static final String JSON_SUFFIX = ".json";
 
     private static final Logger logger = LoggerFactory.getLogger(PostgreSqlJson.class);
     private static final Logger cliLogger = LoggerFactory.getLogger("cli");
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    /**
+     * Store current log position for each log file.
+     */
     final Map<String, Long> position = new ConcurrentHashMap<>();
 
+    /**
+     * LogEnricher instance to use in log processing.
+     */
     LogEnricher logEnricher = new EnrichmentOff();
 
+    /**
+     * Path to PostgreSQL log directory in JSON format.
+     */
     @CommandLine.Parameters(index = "0", description = "Path to PostgreSQL log directory in JSON format")
     String watchDir;
+    /**
+     * Interval of saving (in second) of the current read position in the log files.
+     * The value must be within a range from 1 till 1000 second.
+     */
     @CommandLine.Option(names = {"-i", "--save_interval"},  defaultValue = "10",
             description = "Interval of saving (in second) of the current read position in the log files. " +
                     "The value must be within a range from 1 till 1000 second")
     long saveInterval;
+    /**
+     * The host name of the PostgreSQL server.
+     */
     @CommandLine.Option(names = {"-H", "--host"}, description = "The host name of the PostgreSQL server")
     String posgreSqlHost;
+    /**
+     * The port number the PostgreSQL server is listening on.
+     */
     @CommandLine.Option(names = {"-p", "--port"}, defaultValue = "5432", description = "The port number the PostgreSQL server is listening on")
     int posgreSqlPort;
+    /**
+     * The database name.
+     */
     @CommandLine.Option(names = {"-d", "--database"}, defaultValue = "postgres", description = "The database name")
     String posgreSqlDatabase;
+    /**
+     * The database user on whose behalf the connection is being made.
+     */
     @CommandLine.Option(names = {"-u", "--user"}, defaultValue = "postgres",
             description = "The database user on whose behalf the connection is being made")
     String posgreSqlUserName;
 
+    /**
+     * Password for PG connection.
+     */
     @CommandLine.Option(names = "--password", arity = "0..1", interactive = true)
     String posgreSqlPassword = System.getenv("PGPASSWORD");
 
+    /**
+     * Database query cache size.
+     */
     @CommandLine.Option(names = {"-c", "--max_cache_size"},  defaultValue = "50000",
             description = "Database query cache size")
     int maximumQueryCacheSize;
+    /**
+     * Path to file to save current processed position in log files. Required write capability for this program.
+     */
     @CommandLine.Option(names = {"-lp", "--log_pos_file"}, defaultValue = ".current_log_position",
             description = "Path to file to save current processed position in log files. " +
                     "Required write capability for this program")
@@ -84,7 +118,6 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
     @Getter
     private WatchService fsWatchService;
 
-    @SneakyThrows
     /**
      * Main method to execute the application.
      * Initializes the PostgreSqlJson class, executes the command line arguments, and exits the system if required.
@@ -99,6 +132,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * endif
      * stop
      */
+    @SneakyThrows
     public static void main(String[] args) {
         try (PostgreSqlJson postgreSqlJson = new PostgreSqlJson()){
             int exitCode = new CommandLine(postgreSqlJson).execute(args);
@@ -108,6 +142,12 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         }
     }
 
+    /**
+     * Calls the method responsible for watching PostgreSQL logs.
+     *
+     * @return system exit code
+     * @throws Exception if an error occurs while watching the logs
+     */
     @Override
     public Integer call() throws Exception {
         return watchPostgreSqlLogs();
@@ -125,6 +165,8 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * The method also makes use of a log enricher (if configured) to enhance the log data
      * with additional information.
      * </p>
+     *
+     * @return system exit code
      *
      * @throws IOException if an I/O error occurs initializing the watcher or processing the logs.
      * @throws InterruptedException if the watch service is interrupted while waiting for events.
@@ -254,10 +296,24 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
         }
     }
 
+    /**
+     * Registers the specified dir with the given watch service to listen for file creation and modification events.
+     *
+     * @param dirToWatch the directory path to be watched
+     * @param watchService the watch service to which the directory should be registered
+     * @throws IOException if an I/O error occurs
+     */
     protected void registerWatchEvent(Path dirToWatch, WatchService watchService) throws IOException {
         dirToWatch.register(watchService, ENTRY_CREATE, ENTRY_MODIFY);
     }
 
+    /**
+     * Returns a new {@link WatchService} instance that can be used to watch
+     * objects for changes in a file tree.
+     *
+     * @return a new {@link WatchService} instance
+     * @throws IOException if an I/O error occurs
+     */
     protected WatchService getWatchService() throws IOException {
         return FileSystems.getDefault().newWatchService();
     }
@@ -502,6 +558,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * </p>
      *
      * @throws IOException if an I/O error occurs while managing the log file positions.
+     * @return return shutdown hook thread
      * @plantUml
      * start
      * if (currentPositionFile exists and not empty?) then (yes)

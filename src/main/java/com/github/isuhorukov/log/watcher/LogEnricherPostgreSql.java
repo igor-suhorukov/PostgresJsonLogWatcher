@@ -16,6 +16,9 @@ import java.sql.ResultSet;
  * extension to fetch SQL query statements based on query IDs.
  */
 public class LogEnricherPostgreSql implements LogEnricher {
+    /**
+     * Represents the identifier for the log watcher enricher.
+     */
     public static final String LOG_WATCHER_ENRICHER = "log_watcher_enricher";
     private final Connection connection;
     private final PreparedStatement preparedStatement;
@@ -55,7 +58,7 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * @param queryId the ID of the query to retrieve
      * @return the SQL query associated with the provided query ID, or {@code null} if the query ID is invalid
      * @plantUml
-     * title Flowchart Diagram for getStatement()
+     * title Activity Diagram for getStatement()
      * start
      * if (queryId is null or empty?) then (yes)
      * :return null;
