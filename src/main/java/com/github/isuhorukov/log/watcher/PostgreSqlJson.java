@@ -542,7 +542,7 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * start
      * :Check if position is empty?;
      * if (yes) then (true)
-     * :return;
+     * stop
      * endif
      * :Create FileOutputStream for currentLogPositionFile;
      * :Write new TreeMap(position) to currentPostitionFile using mapper;
@@ -577,10 +577,10 @@ public class PostgreSqlJson implements Callable<Integer>, Closeable {
      * :Get jsonLogName from jsonLog;
      * :Compute from position using jsonLogName;
      * if (jsonLog.length() == 0) then (yes)
-     * :return;
+     * stop
      * endif
      * if (jsonLog.length() &lt;= from) then (yes)
-     * :return;
+     * stop
      * endif
      * :Open RandomAccessFile randomAccessJson in read mode;
      * :Seek randomAccessJson to position from;
