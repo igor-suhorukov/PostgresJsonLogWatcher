@@ -16,6 +16,9 @@ import java.sql.ResultSet;
  * extension to fetch SQL query statements based on query IDs.
  */
 public class LogEnricherPostgreSql implements LogEnricher {
+    /**
+     * Represents the identifier for the log watcher enricher.
+     */
     public static final String LOG_WATCHER_ENRICHER = &quot;log_watcher_enricher&quot;;
     private final Connection connection;
     private final PreparedStatement preparedStatement;
@@ -39,14 +42,14 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * :Prepare SQL statement for pg_stat_statements query;
      * stop
      */
-<span class="fc" id="L42">    @SneakyThrows</span>
-<span class="fc" id="L43">    public LogEnricherPostgreSql(String host, int port, String database, String user, String password, int maximumSize) {</span>
-<span class="fc" id="L44">        cache = Caffeine.newBuilder().maximumSize(maximumSize).build();</span>
-<span class="fc" id="L45">        connection = DriverManager.getConnection(&quot;jdbc:postgresql://&quot;+ host +&quot;:&quot;+ port +&quot;/&quot; + database +</span>
-<span class="pc bpc" id="L46" title="1 of 4 branches missed.">                (database!=null &amp;&amp; database.contains(&quot;?&quot;)?&quot;&amp;&quot;:&quot;?&quot;) + &quot;ApplicationName=&quot; + LOG_WATCHER_ENRICHER,</span>
+<span class="fc" id="L45">    @SneakyThrows</span>
+<span class="fc" id="L46">    public LogEnricherPostgreSql(String host, int port, String database, String user, String password, int maximumSize) {</span>
+<span class="fc" id="L47">        cache = Caffeine.newBuilder().maximumSize(maximumSize).build();</span>
+<span class="fc" id="L48">        connection = DriverManager.getConnection(&quot;jdbc:postgresql://&quot;+ host +&quot;:&quot;+ port +&quot;/&quot; + database +</span>
+<span class="pc bpc" id="L49" title="1 of 4 branches missed.">                (database!=null &amp;&amp; database.contains(&quot;?&quot;)?&quot;&amp;&quot;:&quot;?&quot;) + &quot;ApplicationName=&quot; + LOG_WATCHER_ENRICHER,</span>
                 user, password);
-<span class="fc" id="L48">        preparedStatement = connection.prepareStatement(&quot;select query from pg_stat_statements where queryid=?&quot;);</span>
-<span class="fc" id="L49">    }</span>
+<span class="fc" id="L51">        preparedStatement = connection.prepareStatement(&quot;select query from pg_stat_statements where queryid=?&quot;);</span>
+<span class="fc" id="L52">    }</span>
 
     /**
      * Retrieves the SQL query corresponding to the provided query ID from the cache or the PostgreSQL database.
@@ -55,7 +58,7 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * @param queryId the ID of the query to retrieve
      * @return the SQL query associated with the provided query ID, or {@code null} if the query ID is invalid
      * @plantUml
-     * title Flowchart Diagram for getStatement()
+     * title Activity Diagram for getStatement()
      * start
      * if (queryId is null or empty?) then (yes)
      * :return null;
@@ -94,30 +97,30 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * end
      */
     @Override
-<span class="fc" id="L97">    @SneakyThrows</span>
+<span class="fc" id="L100">    @SneakyThrows</span>
     public String getStatement(String queryId) {
 
-<span class="fc bfc" id="L100" title="All 4 branches covered.">        if(queryId==null || queryId.isEmpty()){</span>
-<span class="fc" id="L101">            return null;</span>
+<span class="fc bfc" id="L103" title="All 4 branches covered.">        if(queryId==null || queryId.isEmpty()){</span>
+<span class="fc" id="L104">            return null;</span>
         }
         try {
-<span class="fc" id="L104">            long queryIdLong = Long.parseLong(queryId);</span>
-<span class="fc" id="L105">            return cache.get(queryIdLong, this::internalGetStatement);</span>
-<span class="fc" id="L106">        } catch (NumberFormatException e) {</span>
-<span class="fc" id="L107">            return null;</span>
+<span class="fc" id="L107">            long queryIdLong = Long.parseLong(queryId);</span>
+<span class="fc" id="L108">            return cache.get(queryIdLong, this::internalGetStatement);</span>
+<span class="fc" id="L109">        } catch (NumberFormatException e) {</span>
+<span class="fc" id="L110">            return null;</span>
         }
     }
 
-<span class="fc" id="L111">    @SneakyThrows</span>
+<span class="fc" id="L114">    @SneakyThrows</span>
     private String internalGetStatement(Long queryId) {
-<span class="fc" id="L113">        preparedStatement.setLong(1, queryId);</span>
-<span class="fc" id="L114">        try (ResultSet resultSet = preparedStatement.executeQuery()){</span>
-<span class="fc bfc" id="L115" title="All 2 branches covered.">            if(resultSet.next()){</span>
-<span class="fc" id="L116">                return resultSet.getString(1);</span>
+<span class="fc" id="L116">        preparedStatement.setLong(1, queryId);</span>
+<span class="fc" id="L117">        try (ResultSet resultSet = preparedStatement.executeQuery()){</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            if(resultSet.next()){</span>
+<span class="fc" id="L119">                return resultSet.getString(1);</span>
             } else {
-<span class="fc" id="L118">                return null;</span>
+<span class="fc" id="L121">                return null;</span>
             }
-<span class="pc bpc" id="L120" title="1 of 2 branches missed.">        }</span>
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">        }</span>
     }
 
     /**
@@ -131,7 +134,7 @@ public class LogEnricherPostgreSql implements LogEnricher {
      */
     @Override
     public String enricherApplicationName() {
-<span class="fc" id="L134">        return LOG_WATCHER_ENRICHER;</span>
+<span class="fc" id="L137">        return LOG_WATCHER_ENRICHER;</span>
     }
 
     /**
@@ -147,9 +150,9 @@ public class LogEnricherPostgreSql implements LogEnricher {
      * stop
      */
     @Override
-<span class="pc" id="L150">    @SneakyThrows</span>
+<span class="pc" id="L153">    @SneakyThrows</span>
     public void close() throws IOException {
-<span class="fc" id="L152">        connection.close();</span>
-<span class="fc" id="L153">    }</span>
+<span class="fc" id="L155">        connection.close();</span>
+<span class="fc" id="L156">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
